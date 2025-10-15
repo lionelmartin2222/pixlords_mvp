@@ -1,0 +1,55 @@
+ETA<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixlords.com - El Mapa Pixelado con Propiedad</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Pixlords: ¡Sé el Señor de los Píxeles!</h1>
+        <div id="wallet-info">
+            <button id="connect-wallet">Conectar Billetera (MetaMask)</button>
+            <p>Estado: <span id="status-message">Desconectado</span></p>
+        </div>
+    </header>
+
+    <main>
+        <div id="cart-bar">
+            <span id="cart-summary">Cesta: 0 píxeles seleccionados | Total: 0.00 USDC</span>
+            <button id="checkout-button" class="action-btn" disabled>Pagar Cesta</button>
+        </div>
+
+        <div id="pixel-map-container">
+            </div>
+
+        <div id="modal-backdrop" style="display:none;">
+            <div id="pixel-modal">
+                <h2 id="modal-title">Píxel Seleccionado:</h2>
+                <p>Coordenada: <span id="modal-coord"></span></p>
+                <p>Dueño: <span id="modal-owner"></span></p>
+                <p>Precio de Compra: <span id="modal-price"></span></p>
+                
+                <div id="action-area">
+                    <button id="add-to-cart-button" class="action-btn" style="display:none;">Añadir a Cesta</button>
+                    
+                    <div id="owner-controls" style="display:none;">
+                        <h3>Soy el Dueño:</h3>
+                        <input type="color" id="color-picker" value="#000000">
+                        <button id="change-color-btn" class="action-btn">Cambiar Color</button>
+                        <hr>
+                        <input type="number" id="resale-price" placeholder="Precio de reventa USDC (ej. 1.01)" min="1.01">
+                        <button id="set-price-btn" class="action-btn">Fijar Precio</button>
+                    </div>
+                </div>
+
+                <button id="close-modal" class="close-btn">Cerrar</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script> 
+    <script src="app.js"></script>
+</body>
+</html>
