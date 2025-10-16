@@ -14,42 +14,55 @@ let currentAccount = null;
 let currentPixel = { x: null, y: null }; 
 
 // =========================================================
-// PARTE I: SIMULACIÓN DE DATOS (Geografía y Propiedad)
+// FUNCIÓN CORREGIDA: Simulación Geográfica Orgánica (Ruido y Seno)
 // =========================================================
 
 function getInitialMapColor(x, y) {
     const LAND_COLOR = '#008000'; // Tierra
     const WATER_COLOR = '#0000FF'; // Mar
-    const RIVER_BORDER = '#582C0E'; // Frontera/Río
+    const COAST_COLOR = '#582C0E'; // Frontera/Costa (Para textura)
 
-    const relY = y;
-    const relX = x;
-
-    // Patrón de píxeles para simular una masa continental compleja
-    const isLand = 
-        (relX > 20 && relX < 150 && relY > 30 && relY < 180) ||
-        (relX > 200 && relX < 480 && relY > 10 && relY < 170) ||
-        (relX > 380 && relX < 450 && relY > 100 && relY < 160) ||
-        (relY > 185 && relX % 5 === 0); 
+    const centerX = WIDTH / 2; // 250
+    const centerY = HEIGHT / 2; // 100
     
-    const isIsland = (relX % 37 === 0 && relY % 13 === 0);
-    const isCoastline = (relX % 5 === 0 || relY % 5 === 0);
+    // 1. Crear una base continental centrada (forma elíptica, no rectangular)
+    // Coeficientes para hacer la forma más ancha que alta (500x200)
+    const factorX = 0.45; 
+    const factorY = 0.9;
+    
+    // Distancia al centro, ponderada para crear una elipse
+    const dist = Math.sqrt(
+        Math.pow((x - centerX) / factorX, 2) + 
+        Math.pow((y - centerY) / factorY, 2)
+    );
 
-    if (isLand || isIsland) {
-        if (relX > 300 && relX < 350 && relY > 50 && relY < 90) {
+    // 2. Aplicar Ruido (Irregularidad)
+    // El ruido hace que los bordes sean irregulares. Usamos el seno para añadir ondulaciones.
+    const noise = Math.sin(x * 0.05) * 5 + Math.sin(y * 0.05) * 5;
+    
+    // 3. Crear Islas Aleatorias
+    const isIsland = (Math.random() < 0.0005) && (x > 10 && x < 490);
+
+    // 4. Determinar la Tierra
+    // Si la distancia está dentro de 450 (la base) + el ruido, es tierra
+    if (dist < (450 + noise) || isIsland) {
+        
+        // Simular Lago Interior Grande (Ejemplo: en la mitad derecha del mapa)
+        if (x > 300 && y > 50 && y < 150 && Math.sqrt(Math.pow(x - 370, 2) + Math.pow(y - 100, 2)) < 50) {
             return WATER_COLOR;
         }
 
-        if (isCoastline && !isIsland && (relX < 20 || relX > 470)) {
-            return RIVER_BORDER;
+        // Simular textura de ríos/fronteras (solo para el color, no funcionalidad)
+        if (x % 30 === 0 || y % 15 === 0) {
+            return COAST_COLOR;
         }
-
+        
         return LAND_COLOR;
     }
     
+    // 5. Océano
     return WATER_COLOR; 
 }
-
 
 function initializeMapData() {
     for (let y = 0; y < HEIGHT; y++) {
