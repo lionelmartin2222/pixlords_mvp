@@ -56,12 +56,10 @@ header p {
     image-rendering: pixelated; 
 }
 
-/* Contenedor interno que asegura el tamaño fijo del mapa para los píxeles */
-#pixel-map-container > div {
-    width: 1300px; 
-    height: 520px; 
-    display: flex;
-    flex-wrap: wrap;
+/* Contenedor interno para que los píxeles floten correctamente */
+#pixel-map-container {
+    /* ... el resto de estilos del contenedor map-container ... */
+    display: block; /* Asegura el flujo normal */
 }
 
 .pixel {
