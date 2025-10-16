@@ -60,7 +60,11 @@ const PIXEL_COLOR_MAP = {
     '4169e1': '#0000FF', // Agua (mapeado al azul que usamos en el CSS)
 };
 
-// Inicializa los datos simulados (Corregido el mapeo de color)
+// =========================================================
+// FUNCIÓN initializeMapData (VERSIÓN DE LANZAMIENTO SIN SIMULACIÓN DE PROPIEDAD)
+// =========================================================
+
+// Inicializa los datos (AHORA SIN SIMULACIÓN DE DUEÑOS AL AZAR)
 function initializeMapData() {
     let cursor = 0;
     const SEA_COLOR_IN_DATA = '4169e1'; // El código hexadecimal del azul en tu matriz de datos
@@ -73,14 +77,17 @@ function initializeMapData() {
             const hexColor = MAP_DATA_STRING.substring(cursor, cursor + 6);
             cursor += 6; 
             
-            // LÓGICA CORREGIDA: Si el color leído es el color del Mar, es Mar. Si no, es Tierra.
-            const color = (hexColor === SEA_COLOR_IN_DATA) ? '#0000FF' : '#008000'; 
+            // LÓGICA DE COLOR: Si el color leído es el color del Mar, es Mar. Si no, es Tierra.
+            // Esto corrige el problema del mapa todo verde.
+            const color = (hexColor.toUpperCase() === SEA_COLOR_IN_DATA.toUpperCase()) ? SEA_COLOR : LAND_COLOR; 
             
-            // LÓGICA DE PROPIEDAD (Simulación)
-            const isOwned = (color !== '#0000FF') && (Math.random() > 0.85); 
-            const owner = isOwned ? '0xAbcD...1234' : 'Nadie'; 
-            
-            const price = isOwned ? 1.50 : INITIAL_PRICE_USDC; 
+            // LÓGICA DE PROPIEDAD DE LANZAMIENTO: 
+            // 1. isOwned es SIEMPRE FALSO
+            // 2. Owner es SIEMPRE 'Nadie'
+            // 3. Precio es SIEMPRE 1.00 USDC
+            const isOwned = false; 
+            const owner = 'Nadie'; 
+            const price = INITIAL_PRICE_USDC; 
 
             mapData[index] = {
                 x,
