@@ -44,12 +44,11 @@ const PIXEL_COLOR_MAP = {
     '4169e1': '#0000FF', // Agua (mapeado al azul que usamos en el CSS)
 };
 
-// =========================================================
-// PARTE I: FUNCIÓN DE INICIALIZACIÓN CON MATRIZ
-// =========================================================
-
+// Inicializa los datos simulados (Corregido el mapeo de color)
 function initializeMapData() {
     let cursor = 0;
+    const SEA_COLOR_IN_DATA = '4169e1'; // El código hexadecimal del azul en tu matriz de datos
+
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
             const index = y * WIDTH + x;
@@ -58,14 +57,13 @@ function initializeMapData() {
             const hexColor = MAP_DATA_STRING.substring(cursor, cursor + 6);
             cursor += 6; 
             
-            // Asignar el color final (Usamos los colores de la paleta del CSS)
-            const color = (hexColor === '008000') ? '#008000' : '#0000FF'; 
+            // LÓGICA CORREGIDA: Si el color leído es el color del Mar, es Mar. Si no, es Tierra.
+            const color = (hexColor === SEA_COLOR_IN_DATA) ? '#0000FF' : '#008000'; 
             
             // LÓGICA DE PROPIEDAD (Simulación)
-            const isOwned = (color !== '#0000FF') && (Math.random() > 0.90); // 10% de Tierra ocupada
+            const isOwned = (color !== '#0000FF') && (Math.random() > 0.85); 
             const owner = isOwned ? '0xAbcD...1234' : 'Nadie'; 
             
-            // PRECIO CORREGIDO: 1.00 si libre, 1.50 si ocupado
             const price = isOwned ? 1.50 : INITIAL_PRICE_USDC; 
 
             mapData[index] = {
@@ -79,7 +77,6 @@ function initializeMapData() {
         }
     }
 }
-
 // =========================================================
 // PARTE II: RENDERING Y EVENTOS (Frontend)
 // =========================================================
