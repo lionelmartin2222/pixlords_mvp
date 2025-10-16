@@ -1,77 +1,89 @@
-/* ========================= app.js: VERSIÓN FINAL CON SIMULACIÓN GEOGRÁFICA Y LÓGICA DE CESTA MEJORADA ========================= */
+/* ========================= app.js: VERSIÓN 5.0 COMPLETA ========================= */
 
-// --- CONFIGURACIÓN DEL MAPA (NO MODIFICAR ESTAS CONSTANTES) ---
+// --- CONFIGURACIÓN DEL MAPA ---
 const WIDTH = 500; // Ancho lógico del mapa
 const HEIGHT = 200; // Alto lógico del mapa
 const TOTAL_PIXELS = WIDTH * HEIGHT;
 const MAP_CONTAINER_ID = 'pixel-map-container';
 
-// --- ESTADO GLOBAL ---
-let selectedPixels = new Set(); // Conjunto de píxeles seleccionados para compra por lote
-let mapData = []; // Almacenará el estado (color, dueño, precio) de cada píxel
+// --- ESTADO GLOBAL Y CONFIGURACIÓN CRÍTICA (PLACEHOLDERS DE BLOCKCHAIN) ---
+// *** REEMPLAZAR ESTAS VARIABLES CON LOS ENTREGABLES DE MUHAMMAD ***
+const CONTRACT_ADDRESS = "DIRECCION_DE_CONTRATO_AQUI"; 
+const PIXEL_CONTRACT_ABI = [/* PEGAR EL JSON ABI COMPLETO AQUÍ */]; 
+const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a922Aa845041"; // USDC en Polygon
 
-// --- SIMULACIÓN INICIAL (REEMPLAZAR POR LLAMADAS A SMART CONTRACT) ---
+const INITIAL_PRICE_USDC = 1.00; // Precio fijo de compra inicial
+let selectedPixels = new Set(); 
+let mapData = []; 
+let currentAccount = null; 
+let currentPixel = { x: null, y: null }; 
+
+// --- FUNCIÓN DE COORDENADAS AMIGABLES ---
+const COORD_MAP_TO_UI = (x, y) => {
+    let colStr = '';
+    let i = x;
+    while (i >= 0) {
+        colStr = String.fromCharCode(i % 26 + 'A'.charCodeAt(0)) + colStr;
+        i = Math.floor(i / 26) - 1;
+    }
+    const rowStr = y + 1; 
+    return `${colStr}-${rowStr}`;
+};
+
+// =========================================================
+// PARTE I: SIMULACIÓN DE DATOS (Geografía y Propiedad)
+// =========================================================
 
 // Función de Simulación de Mapa (Geografía más compleja)
 function getInitialMapColor(x, y) {
-    const LAND_COLOR = '#008000'; // Verde (Tierra)
-    const WATER_COLOR = '#0000FF'; // Azul (Agua)
-    const RIVER_BORDER = '#582C0E'; // Marrón (Simulación de río o borde)
-    
-    // Coordenadas relativas (0 a 199)
+    const LAND_COLOR = '#008000'; // Tierra
+    const WATER_COLOR = '#0000FF'; // Mar
+    const RIVER_BORDER = '#582C0E'; // Frontera/Río
+
     const relY = y;
     const relX = x;
 
-    // 1. Masa Continental Principal (Tierra central)
-    const isCentralLand = (relX > 50 && relX < 450 && relY > 20 && relY < 180);
+    // Patrón de píxeles para simular una masa continental compleja
+    const isLand = 
+        (relX > 20 && relX < 150 && relY > 30 && relY < 180) ||
+        (relX > 200 && relX < 480 && relY > 10 && relY < 170) ||
+        (relX > 380 && relX < 450 && relY > 100 && relY < 160) ||
+        (relY > 185 && relX % 5 === 0); 
+    
+    const isIsland = (relX % 37 === 0 && relY % 13 === 0);
+    const isCoastline = (relX % 5 === 0 || relY % 5 === 0);
 
-    if (isCentralLand) {
-        
-        // 1a. Simulación de un Gran Lago Central (Ojo de agua)
-        if (relX > 150 && relX < 350 && relY > 60 && relY < 140) {
-            
-            // Simulación de una isla dentro del lago
-            if (relX > 220 && relX < 280 && relY > 90 && relY < 110) {
-                 return LAND_COLOR;
-            }
-
+    if (isLand || isIsland) {
+        // Simular un lago interior (Ojo de agua, ej. Asia Central)
+        if (relX > 300 && relX < 350 && relY > 50 && relY < 90) {
             return WATER_COLOR;
         }
 
-        // 1b. Simulación de costa irregular (para que no sea un bloque perfecto)
-        if (relX % 2 === 0 && relY % 3 === 0 && (relX < 60 || relX > 440)) {
-            return WATER_COLOR;
+        // Simular costas con color diferente
+        if (isCoastline && !isIsland && (relX < 20 || relX > 470)) {
+            return LAND_BROWN;
         }
 
-        // 1c. Simulación de fronteras/ríos internos (líneas marrones)
-        // Patrón de cuadrícula tenue para dar textura
-        if ((relX % 20 === 0) || (relY % 20 === 0)) {
-            // Evitar que las líneas pasen por el lago
-            if (! (relX > 150 && relX < 350 && relY > 60 && relY < 140)) {
-                 return RIVER_BORDER;
-            }
-        }
-        
         return LAND_COLOR;
     }
     
-    // 2. Océano y Borde Exterior
     return WATER_COLOR; 
 }
 
 
-// Inicializa los datos simulados
+// Inicializa los datos simulados (Corregido el precio por defecto y el propietario)
 function initializeMapData() {
     for (let y = 0; y < HEIGHT; y++) {
         for (let x = 0; x < WIDTH; x++) {
             const index = y * WIDTH + x;
             const color = getInitialMapColor(x, y);
             
-            // Simulación: los píxeles de agua (blue) no tienen dueño ni están en venta
-            // Los píxeles de tierra (verde o marrón) son propiedad de una billetera simulada (simulando que alguien ya los compró)
-            const isOwned = (color !== '#0000FF'); 
+            // LÓGICA CORREGIDA: 15% de probabilidad de estar ocupado si es tierra
+            const isOwned = (color !== '#0000FF') && (Math.random() > 0.85); 
             const owner = isOwned ? '0xAbcD...1234' : 'Nadie'; 
-            const price = isOwned ? 1.50 : 1.00; // Si ya tiene dueño, es más caro
+            
+            // PRECIO CORREGIDO: 1.00 si libre, 1.50 si ocupado (simulación reventa)
+            const price = isOwned ? 1.50 : INITIAL_PRICE_USDC; 
 
             mapData[index] = {
                 x,
@@ -85,36 +97,35 @@ function initializeMapData() {
     }
 }
 
-// --- RENDERING ---
+// =========================================================
+// PARTE II: RENDERING Y EVENTOS (Frontend)
+// =========================================================
 
 function renderMap() {
     const mapContainer = document.querySelector(`#${MAP_CONTAINER_ID} > div`);
-    mapContainer.innerHTML = ''; // Limpiar mapa anterior
+    mapContainer.innerHTML = ''; 
 
     mapData.forEach(pixel => {
         const pixelElement = document.createElement('div');
         pixelElement.className = 'pixel';
         pixelElement.style.backgroundColor = pixel.color;
         
-        // Atributo para micro-interacción de CSS: indica si está poseído
         if (pixel.isOwned) {
             pixelElement.setAttribute('data-owner-status', 'owned');
         }
 
-        // Atributos de datos (coordenadas lógicas)
         pixelElement.dataset.x = pixel.x;
         pixelElement.dataset.y = pixel.y;
 
-        // Añadir listeners
+        // Añadir listeners para clic izquierdo (modal) y clic derecho (selección de lote)
         pixelElement.addEventListener('click', handlePixelClick);
-        pixelElement.addEventListener('contextmenu', handlePixelRightClick); // Para selección por lote
+        pixelElement.addEventListener('contextmenu', handlePixelRightClick); 
 
         mapContainer.appendChild(pixelElement);
     });
 }
 
-// --- EVENTOS DEL USUARIO ---
-
+// Lógica de clic izquierdo (o modal)
 function handlePixelClick(event) {
     const pixelElement = event.target;
     const x = parseInt(pixelElement.dataset.x);
@@ -122,18 +133,15 @@ function handlePixelClick(event) {
     const index = y * WIDTH + x;
     const pixel = mapData[index];
 
-    // Mostrar modal con información del píxel
     showModal(pixel, pixelElement);
 }
 
 // Lógica de clic derecho (o lote)
 function handlePixelRightClick(event) {
-    // Verificar si el evento es un objeto de Evento o si fue llamado desde showModal
     const targetElement = event.target || event; 
     
-    // Si fue llamado desde showModal, la función no tiene preventDefault
     if (event.preventDefault) {
-        event.preventDefault(); // Prevenir el menú contextual del navegador
+        event.preventDefault(); 
     }
     
     const pixelElement = targetElement;
@@ -142,7 +150,6 @@ function handlePixelRightClick(event) {
     const id = `${x},${y}`;
     const pixel = mapData[y * WIDTH + x];
 
-    // Lógica de selección para compra por lote (solo si no tiene dueño simulado)
     if (!pixel.isOwned) {
         if (selectedPixels.has(id)) {
             selectedPixels.delete(id);
@@ -153,7 +160,6 @@ function handlePixelRightClick(event) {
         }
         updateCartSummary();
     } else {
-        // Solo alertar si el evento fue un clic derecho real (no una llamada desde modal)
         if (event.preventDefault) { 
             alert("Este píxel está ocupado o en venta. Click izquierdo para ver detalles.");
         }
@@ -162,12 +168,11 @@ function handlePixelRightClick(event) {
 
 function updateCartSummary() {
     const count = selectedPixels.size;
-    const totalCost = count * 1.00; // Asumimos 1 USDC por píxel para compra inicial
+    const totalCost = count * INITIAL_PRICE_USDC; 
     
     document.getElementById('cart-summary').textContent = 
         `Cesta: ${count} píxeles seleccionados | Total: ${totalCost.toFixed(2)} USDC`;
         
-    // Habilitar el botón de pagar lote si hay selecciones
     document.getElementById('pay-batch-btn').disabled = count === 0;
 }
 
@@ -183,7 +188,6 @@ function clearCart() {
     updateCartSummary();
 }
 
-// --- FUNCIONALIDAD DEL MODAL ---
 
 function showModal(pixel, element) {
     document.getElementById('modal-coords').textContent = `(X:${pixel.x}, Y:${pixel.y})`;
@@ -191,22 +195,17 @@ function showModal(pixel, element) {
     document.getElementById('modal-owner').textContent = pixel.owner;
     document.getElementById('modal-color-display').textContent = pixel.color;
     
-    // Aquí iría la lógica de si el propietario es el usuario conectado
-    const isUserOwner = (pixel.owner === '0xAbcD...1234'); // SIMULACIÓN
+    // Asumimos que si la billetera está conectada y es la simulación, eres el dueño
+    const isUserOwner = (pixel.owner === '0xAbcD...1234'); 
 
-    // Controles de compra y propietario
-    document.getElementById('buy-controls').style.display = 'flex'; // Siempre visible
-    document.getElementById('owner-controls').style.display = isUserOwner ? 'block' : 'none'; // Mostrar si es tu píxel
-
-    
-    // LÓGICA DE BOTÓN DE ACCIÓN: COMPRA INDIVIDUAL vs. AÑADIR A CESTA
+    // Botones
+    document.getElementById('owner-controls').style.display = isUserOwner ? 'block' : 'none'; 
     const buyBtn = document.getElementById('buy-pixel-btn');
 
     if (!pixel.isOwned) {
         // Píxel libre: Botón para añadir a la cesta (lote)
         buyBtn.textContent = 'AÑADIR A CESTA (Lote)';
         buyBtn.onclick = () => {
-            // Llama a la lógica de clic derecho para seleccionarlo (o deseleccionarlo si ya estaba)
             handlePixelRightClick({ preventDefault: () => {}, target: element });
             document.getElementById('modal-backdrop').style.display = 'none';
         };
@@ -214,8 +213,8 @@ function showModal(pixel, element) {
         // Píxel ocupado/en venta: Botón para compra individual (reventa)
         buyBtn.textContent = `COMPRAR (Reventa) por ${pixel.price.toFixed(2)} USDC`;
         buyBtn.onclick = () => {
-            alert(`Simulación de Compra Individual/Reventa. El Smart Contract se llamará con la función de reventa.`);
-            // Aquí irá la llamada real a executeResaleOrIndividualBuy
+            alert(`Simulación de Compra Individual/Reventa. Precio: ${pixel.price.toFixed(2)} USDC.`);
+            // **AQUÍ IRÁ LA LLAMADA FINAL AL SMART CONTRACT**
             document.getElementById('modal-backdrop').style.display = 'none';
         };
     }
@@ -227,24 +226,32 @@ function hideModal() {
     document.getElementById('modal-backdrop').style.display = 'none';
 }
 
-// --- CONEXIÓN A METAMASK (SIMULADA) ---
+// =========================================================
+// PARTE III: CONEXIÓN REAL A BLOCKCHAIN (PLACEHOLDERS)
+// =========================================================
+
+// Estas funciones serán implementadas con el ABI de Muhammad.
+// Actualmente son solo simulaciones.
 
 function connectWallet() {
-    // Aquí iría la lógica real de MetaMask/Web3.js
     const statusMessage = document.getElementById('status-message');
     const connectBtn = document.getElementById('connect-wallet');
     
-    // SIMULACIÓN: Conexión exitosa
     setTimeout(() => {
-        statusMessage.textContent = 'Conectado: 0xAbcD...1234';
+        // SIMULACIÓN DE CUENTA CONECTADA
+        currentAccount = '0xAbCdEfGhIjKlMnOpQrStUvWxYz0123456789aB'.toLowerCase();
+        statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
         connectBtn.textContent = 'Desconectar';
-        statusMessage.style.color = '#39FF14'; // Verde neón para conectado
+        statusMessage.style.color = '#39FF14'; 
         connectBtn.onclick = disconnectWallet;
         alert("Simulación de conexión exitosa a MetaMask.");
+        // Después de conectar, se simula una actualización de la visual
+        // En la versión real, se llamaría a refreshMapVisuals()
     }, 500);
 }
 
 function disconnectWallet() {
+    currentAccount = null;
     const statusMessage = document.getElementById('status-message');
     const connectBtn = document.getElementById('connect-wallet');
     
@@ -254,28 +261,27 @@ function disconnectWallet() {
     connectBtn.onclick = connectWallet;
 }
 
+function executeBatchPurchase() {
+    if (selectedPixels.size > 0) {
+        // **AQUÍ IRÁ LA LLAMADA REAL AL SMART CONTRACT buyMultiplePixels**
+        alert(`Simulación de COMPRA POR LOTE de ${selectedPixels.size} píxeles. ¡Llamando al Smart Contract!`);
+        clearCart();
+    }
+}
 
 // --- INICIALIZACIÓN ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inicializar datos del mapa y renderizar
     initializeMapData();
     renderMap();
     
-    // 2. Configurar listeners de botones
+    // Conectar botones principales
     document.getElementById('connect-wallet').addEventListener('click', connectWallet);
+    document.getElementById('pay-batch-btn').addEventListener('click', executeBatchPurchase);
     document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
     document.getElementById('close-modal-btn').addEventListener('click', hideModal);
     
-    // 3. Listener del botón Pagar Lote (SIMULADO)
-    document.getElementById('pay-batch-btn').addEventListener('click', () => {
-        if (selectedPixels.size > 0) {
-            alert(`Simulación: Intentando comprar ${selectedPixels.size} píxeles. \n\n¡Aquí iría la llamada al Smart Contract de Muhammad para compra por lote!`);
-            clearCart();
-        }
-    });
-
-    // 4. Configurar listener del propietario (SIMULADO)
+    // Conectar botones de Dueño (SIMULADO)
     document.getElementById('set-color-btn').addEventListener('click', () => {
         const newColor = document.getElementById('new-color').value;
         alert(`Simulación: Cambiando color a ${newColor}.`);
