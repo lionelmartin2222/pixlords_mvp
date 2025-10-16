@@ -102,7 +102,7 @@ function initializeMapData() {
 // =========================================================
 
 function renderMap() {
-    const mapContainer = document.querySelector(`#${MAP_CONTAINER_ID} > div`);
+    const mapContainer = document.getElementById(MAP_CONTAINER_ID); // <--- Busca solo el contenedor principal
     mapContainer.innerHTML = ''; 
 
     mapData.forEach(pixel => {
