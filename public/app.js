@@ -109,7 +109,7 @@
         // Variables globales que deben estar disponibles en el entorno de Canvas
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pixlords-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; // CORREGIDO: Usar __initial_auth_token
 
         let db;
         let auth;
@@ -126,7 +126,8 @@
             // Función para manejar la autenticación
             async function setupAuth() {
                 try {
-                    if (initialAuthToken) {
+                    // CORRECCIÓN CLAVE: Usar la variable local 'initialAuthToken', no '__initialAuthToken'
+                    if (initialAuthToken) { 
                         await signInWithCustomToken(auth, initialAuthToken);
                         console.log("Autenticación exitosa con token personalizado.");
                     } else {
@@ -139,7 +140,7 @@
                             window.userId = user.uid;
                             console.log("Usuario autenticado. UID:", user.uid);
                             window.isAuthReady = true;
-                            // Una vez que el auth está listo, inicializamos la aplicación
+                            // Una vez que el auth está listo, notificamos a la aplicación
                             if (window.initApp) {
                                 window.initApp();
                             }
@@ -161,11 +162,7 @@
             setupAuth();
         } else {
             console.error("Configuración de Firebase no disponible. Inicialización fallida.");
-            // Si Firebase no está configurado, iniciar la aplicación de todos modos (sin funcionalidad de DB)
             window.isAuthReady = true;
-            if (window.initApp) {
-                window.initApp();
-            }
         }
     </script>
 
@@ -184,6 +181,7 @@
         // **********************************************
         
         let canvas, ctx;
+        window.mapInitialized = false; // Bandera de seguridad
 
         // Estado de Panorámica y Zoom
         let scale = 1.0;
@@ -502,12 +500,12 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
         }
 
         // ====================================================================
-        // Inicialización y Configuración
+        // Inicialización del Canvas y Dibujo
         // ====================================================================
 
         function setupCanvas() {
             const container = document.getElementById('map-wrap');
-            canvas = document.getElementById('mapCanvas'); // Aseguramos que 'canvas' está definido aquí también
+            canvas = document.getElementById('mapCanvas');
             
             if (!canvas) {
                 logToDApp("ERROR: Elemento 'mapCanvas' no encontrado.", true);
@@ -535,42 +533,48 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
             drawMap();
         }
 
-        // Función de inicialización principal (llamada después de la autenticación)
-        window.initApp = function() {
-            document.getElementById('loading-indicator').classList.add('hidden');
-            logToDApp("Inicialización de la aplicación Pixlords completada. El mapa está listo.", false);
+        // Nueva función principal para inicializar SOLO el mapa (independiente de Firebase)
+        function initializeMap() {
+            if (window.mapInitialized) return;
 
             canvas = document.getElementById('mapCanvas');
-            // Doble comprobación y asignación de contexto
             if (!canvas) {
-                logToDApp("ERROR CRÍTICO: No se pudo obtener el elemento Canvas.", true);
+                logToDApp("ERROR CRÍTICO: No se pudo obtener el elemento Canvas para inicializar.", true);
                 return;
             }
             ctx = canvas.getContext('2d');
-            
+
             initializeMapData();
-            setupCanvas(); // setupCanvas ahora también define canvas y ctx si es necesario.
+            setupCanvas();
             initInteractions();
 
-            // Llamada inicial para asegurar el dibujo
-            drawMap();
+            logToDApp("Mapa base dibujado y listo para interacción.", false);
+            window.mapInitialized = true;
+        }
+
+
+        // Función que llama Firebase, ahora solo usada para finalizar la carga
+        window.initApp = function() {
+            // Aseguramos que el mapa se cargue, por si Firebase fue más rápido que DOMContentLoaded
+            if (!window.mapInitialized) {
+                initializeMap();
+            }
+            document.getElementById('loading-indicator').classList.add('hidden');
+            logToDApp("Estado de la dApp actualizado. Listo para conexión de billetera.", false);
         }
         
-        // Ejecutar inicialización después de que el DOM esté completamente cargado.
+        // Ejecución principal: Cargar el mapa tan pronto como el DOM esté listo
         document.addEventListener('DOMContentLoaded', () => {
-             // Mostrar indicador de carga hasta que se complete la autenticación/inicialización
+             // 1. Mostrar indicador de carga
             document.getElementById('loading-indicator').classList.remove('hidden');
-
-            // Si la autenticación ya está lista (en el caso de que el script de auth cargue primero), inicializar.
-            // Si no, la inicialización será llamada por el script de Firebase (setupAuth -> onAuthStateChanged).
-            if (window.isAuthReady) {
-                window.initApp();
-            }
             
-            // Fallback: Si Firebase no está configurado (keys vacías), forzar la inicialización 
-            // de la aplicación para mostrar el mapa, ya que la lógica de auth no se ejecutará.
-            if (typeof __firebase_config === 'undefined' || Object.keys(JSON.parse(__firebase_config)).length === 0) {
-                 window.initApp();
+            // 2. Intentar inicializar el mapa inmediatamente, ya que no depende de Firebase
+            initializeMap();
+
+            // 3. Si no hay Firebase config, forzar la finalización de la carga visual
+            const hasFirebaseConfig = typeof __firebase_config !== 'undefined' && Object.keys(JSON.parse(__firebase_config)).length > 0;
+            if (!hasFirebaseConfig) {
+                 window.initApp(); 
             }
         });
 
