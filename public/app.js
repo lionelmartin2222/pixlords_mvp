@@ -1,4 +1,4 @@
-/* ========================= app.js: VERSIÓN 8.0 FINAL FUNCIONAL Y ESTÉTICA ========================= */
+/* ========================= app.js: VERSIÓN 8.1 - ZOOM IMPLANTADO ========================= */
 
 // --- CONFIGURACIÓN DEL MAPA ---
 const WIDTH = 500; 
@@ -19,21 +19,103 @@ const CONTRACT_ADDRESS = "DIRECCION_DE_CONTRATO_AQUI";
 const PIXEL_CONTRACT_ABI = []; 
 const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a922Aa845041"; 
 
-// --- COLORES FINALES DE LA UI ---
-const LAND_COLOR = '#008000'; // Tierra
-const SEA_COLOR = '#0000FF'; // Mar
+// --- COLORES FINALES DE LA UI ---\nconst LAND_COLOR = '#008000'; // Tierra\nconst SEA_COLOR = '#0000FF'; // Mar\n\n// --- FUNCIÓN DE COORDENADAS AMIGABLES ---\nconst COORD_MAP_TO_UI = (x, y) => {\n    let colStr = '';\n    let i = x;\n    while (i >= 0) {\n        colStr = String.fromCharCode(i % 26 + 'A'.charCodeAt(0)) + colStr;\n        i = Math.floor(i / 26) - 1;\n    }\n    const rowStr = y + 1; \n    return `${colStr}-${rowStr}`;\n};
 
-// --- FUNCIÓN DE COORDENADAS AMIGABLES ---
-const COORD_MAP_TO_UI = (x, y) => {
-    let colStr = '';
-    let i = x;
-    while (i >= 0) {
-        colStr = String.fromCharCode(i % 26 + 'A'.charCodeAt(0)) + colStr;
-        i = Math.floor(i / 26) - 1;
+// =========================================================
+// INICIO DE LA LÓGICA DE ZOOM Y PANORÁMICA (NUEVO CÓDIGO)
+// =========================================================
+
+// Estado de Zoom/Panorámica
+let scale = 1.0; 
+let offsetX = 0;
+let offsetY = 0;
+let isDragging = false;
+let lastX, lastY;
+let dragStartX = 0; 
+let dragStartY = 0;
+let mapContainer; // Referencia al div principal del mapa
+
+function updateTransform() {
+    if (!mapContainer) return;
+    // Aplicar el zoom/pan al contenedor del mapa usando CSS transform
+    mapContainer.style.transform = `scale(${scale})`;
+    // Ajuste de posición (panorámica)
+    mapContainer.style.transformOrigin = '0 0'; // Cambiado a 0 0 para simplificar el cálculo del arrastre
+    mapContainer.style.left = `${offsetX}px`; 
+    mapContainer.style.top = `${offsetY}px`;
+}
+
+function startDrag(event) {
+    if (event.button !== undefined && event.button !== 0) return;
+    
+    isDragging = true;
+    lastX = event.clientX || event.touches[0].clientX;
+    lastY = event.clientY || event.touches[0].clientY;
+    
+    dragStartX = lastX; 
+    dragStartY = lastY;
+    
+    mapContainer.style.cursor = 'grabbing';
+    event.preventDefault(); 
+}
+
+function endDrag(event) {
+    const CLICK_THRESHOLD = 5; 
+    
+    if (isDragging) {
+        isDragging = false;
+        mapContainer.style.cursor = 'grab';
+
+        const finalX = event.clientX || (event.changedTouches ? event.changedTouches[0].clientX : lastX);
+        const finalY = event.clientY || (event.changedTouches ? event.changedTouches[0].clientY : lastY);
+        
+        const dx = Math.abs(finalX - dragStartX);
+        const dy = Math.abs(finalY - dragStartY);
+
+        // Si no fue un arrastre significativo, manejarlo como clic (llamando a la función original)
+        if (dx < CLICK_THRESHOLD && dy < CLICK_THRESHOLD) {
+            const pixelElement = event.target.closest('.pixel');
+            if (pixelElement) {
+                // Simula el evento de click original para no romper la lógica existente
+                handlePixelClick({ target: pixelElement, preventDefault: () => {} }); 
+            }
+        }
     }
-    const rowStr = y + 1; 
-    return `${colStr}-${rowStr}`;
-};
+}
+
+function drag(event) {
+    if (!isDragging || !mapContainer) return;
+    
+    const clientX = event.clientX || event.touches[0].clientX;
+    const clientY = event.clientY || event.touches[0].clientY;
+
+    const dx = clientX - lastX;
+    const dy = clientY - lastY;
+
+    // Actualizar offsets de panorámica
+    offsetX += dx;
+    offsetY += dy;
+
+    lastX = clientX;
+    lastY = clientY;
+
+    updateTransform();
+}
+
+function zoom(event) {
+    event.preventDefault(); 
+    const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
+
+    scale *= zoomFactor;
+    scale = Math.max(0.5, Math.min(5.0, scale)); // Límite de Zoom
+
+    updateTransform();
+}
+
+// =========================================================
+// FIN DE LA LÓGICA DE ZOOM Y PANORÁMICA
+// =========================================================
+
 
 // =========================================================
 // PARTE I: SIMULACIÓN GEOGRÁFICA (MAPA ORGÁNICO)
@@ -116,7 +198,7 @@ function initializeMapData() {
 // =========================================================
 
 function renderMap() {
-    const mapContainer = document.getElementById(MAP_CONTAINER_ID); 
+    mapContainer = document.getElementById(MAP_CONTAINER_ID); // <--- Asignación de la variable global aquí
     mapContainer.innerHTML = ''; 
 
     mapData.forEach(pixel => {
@@ -131,11 +213,23 @@ function renderMap() {
         pixelElement.dataset.x = pixel.x;
         pixelElement.dataset.y = pixel.y;
 
-        pixelElement.addEventListener('click', handlePixelClick);
+        // Se reemplaza el listener de click y se usa mousedown y mouseup para manejar el arrastre
+        // pixelElement.addEventListener('click', handlePixelClick); <-- ELIMINADO
+        
         pixelElement.addEventListener('contextmenu', handlePixelRightClick); 
 
         mapContainer.appendChild(pixelElement);
     });
+    
+    // ==============================================
+    // IMPLANTACIÓN CRÍTICA DE EVENTOS DE MOUSE
+    // ==============================================
+    mapContainer.addEventListener('mousedown', startDrag);
+    mapContainer.addEventListener('mouseup', endDrag);
+    mapContainer.addEventListener('mousemove', drag);
+    mapContainer.addEventListener('mouseleave', endDrag);
+    mapContainer.addEventListener('wheel', zoom);
+    // ==============================================
 }
 
 function handlePixelClick(event) {
@@ -252,7 +346,6 @@ function connectWallet() {
 }
 
 function disconnectWallet() {
-    currentAccount = null;
     const statusMessage = document.getElementById('status-message');
     const connectBtn = document.getElementById('connect-wallet');
     
