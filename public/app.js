@@ -278,7 +278,7 @@
             const baseIslandChance = 0.01;
             let islandChance = baseIslandChance;
 
-            if (x > 0 && mapData[y][x-1].color !== SEA_COLOR) {
+            if (x > 0 && mapData[y] && mapData[y][x-1] && mapData[y][x-1].color !== SEA_COLOR) {
                 islandChance += 0.05;
             }
             if (y > 0 && mapData[y-1][x].color !== SEA_COLOR) {
@@ -299,6 +299,9 @@
             for (let y = 0; y < HEIGHT; y++) {
                 mapData[y] = [];
                 for (let x = 0; x < WIDTH; x++) {
+                    // Inicialización temporal para evitar errores de referencia en getInitialMapColor
+                    mapData[y][x] = { color: SEA_COLOR }; 
+                    
                     const color = getInitialMapColor(x, y);
                     
                     // LÓGICA DE PROPIEDAD DE LANZAMIENTO: TODOS LIBRES
@@ -602,17 +605,19 @@
 
         // --- INICIALIZACIÓN FINAL ---
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function initializeApp() {
             initializeMapData();
             renderMap();
             
             // Adjuntar eventos de drag/zoom al contenedor principal
             mapContainer = document.getElementById(MAP_CONTAINER_ID);
-            mapContainer.addEventListener('mousedown', startDrag);
-            mapContainer.addEventListener('mouseup', endDrag);
-            mapContainer.addEventListener('mousemove', drag);
-            mapContainer.addEventListener('mouseleave', endDrag);
-            mapContainer.addEventListener('wheel', zoom);
+            if(mapContainer) {
+                mapContainer.addEventListener('mousedown', startDrag);
+                mapContainer.addEventListener('mouseup', endDrag);
+                mapContainer.addEventListener('mousemove', drag);
+                mapContainer.addEventListener('mouseleave', endDrag);
+                mapContainer.addEventListener('wheel', zoom);
+            }
             
             // Eventos de botones
             document.getElementById('connect-wallet').addEventListener('click', connectWallet);
@@ -632,7 +637,20 @@
                 logToDApp(`Simulación: Poniendo píxel en venta por ${newPrice} USDC.`, false);
                 hideModal();
             });
+        }
+
+
+        // FIX CRÍTICO: Usar window.onload para asegurar que TODOS los recursos externos (CDN) 
+        // y el DOM se hayan cargado antes de inicializar el mapa.
+        window.onload = initializeApp;
+        
+        // Fallback: Si window.onload no se dispara o el DOM ya estaba listo (caso DOMContentLoaded)
+        document.addEventListener('DOMContentLoaded', () => {
+             if (!mapContainer) { // Solo si initializeApp no se ha ejecutado aún (porque mapContainer es null)
+                 initializeApp();
+             }
         });
+        
     </script>
 </body>
 </html>
