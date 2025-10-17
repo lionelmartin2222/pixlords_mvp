@@ -1,4 +1,4 @@
-/* ========================= style.css: VERSIÓN 6.3 (ULTIMA SOLUCIÓN DE RENDERING) ========================= */
+/* ========================= style.css: VERSIÓN 6.4 (FIX DE CONTENEDOR) ========================= */
 
 /* Importar fuente pixel art */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -22,6 +22,15 @@ header {
     width: 100%;
     max-width: 1300px;
 }
+
+/* --- FIX: AÑADIR ESTILO A MAIN PARA EL FLUJO --- */
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%; /* Asegura que main ocupe todo el ancho */
+}
+/* ----------------------------------------------- */
 
 h1 {
     /* TAMAÑO DE FUENTE GRANDE SOLICITADO */
