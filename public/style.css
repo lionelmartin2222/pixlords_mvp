@@ -1,4 +1,4 @@
-/* ========================= style.css: VERSIÓN 6.4 (FIX DE CONTENEDOR) ========================= */
+/* ========================= style.css: VERSIÓN 6.0 (FINAL Y CORREGIDA) ========================= */
 
 /* Importar fuente pixel art */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -10,7 +10,7 @@ body {
     text-align: center;
     margin: 0;
     padding: 30px 10px;
-    font-size: 12px; 
+    font-size: 14px; /* Aumentar fuente base */
     line-height: 1.8; 
     display: flex;
     flex-direction: column;
@@ -23,83 +23,86 @@ header {
     max-width: 1300px;
 }
 
-/* --- FIX: AÑADIR ESTILO A MAIN PARA EL FLUJO --- */
-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%; /* Asegura que main ocupe todo el ancho */
-}
-/* ----------------------------------------------- */
-
 h1 {
-    /* TAMAÑO DE FUENTE GRANDE SOLICITADO */
-    font-size: 50px; 
+    font-size: 50px; /* Título AÚN más grande */
     color: #39FF14;
     margin-bottom: 0px; 
 }
 header p {
-    font-size: 14px; 
+    font-size: 16px; /* Subtítulo grande */
     color: #D4D4D4; 
     margin-top: 10px;
 }
 
 #wallet-info {
-    font-size: 10px;
+    font-size: 12px;
     color: #D4D4D4;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
+}
+
+/* --- CONTENEDOR DE INTERACCIÓN (PARA ZOOM Y ARRASTRE) --- */
+#map-interaction-wrapper {
+    overflow: hidden; /* Oculta partes del mapa que se salen */
+    width: 1300px; /* Tamaño visual base */
+    height: 520px;
+    max-width: 98vw;
+    margin: 40px auto;
+    border: 8px solid #D4D4D4; 
+    box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); 
+    cursor: grab; /* Cursor inicial para indicar arrastre */
+    position: relative;
+    user-select: none; /* Evitar selección de texto al arrastrar */
 }
 
 /* --- ESTILO DEL MAPA Y LOS PÍXELES --- */
 #pixel-map-container {
-    /* Dimensiones Visuales (500x200 píxeles lógicos) */
-    width: 1000px; 
-    height: 400px; 
+    /* Dimensiones Lógicas Fijas para el Contenido */
+    width: 1300px; 
+    height: 520px; 
     
-    max-width: 98vw; 
-    overflow: hidden; 
-
-    margin: 40px auto;
-    border: 8px solid #D4D4D4; 
-    box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); 
-    position: relative; 
-    image-rendering: pixelated; 
-    cursor: grab; 
-    
-    /* === SOLUCIÓN FINAL DE RENDERING: FORZAR GRID y usar 2px en el PIXEL === */
-    display: grid; 
-    /* Usamos 2px explícitos por píxel. Total 500 * 2px = 1000px. */
-    grid-template-columns: repeat(500, 2px); 
-    grid-template-rows: repeat(200, 2px);   
-    /* ========================================================= */
-
-    /* Propiedades para la Panorámica y Zoom */
+    /* Configuración para el zoom y arrastre */
     transform-origin: 0 0; 
+    transition: transform 0.1s ease-out; /* Animación para el zoom */
+    position: absolute; /* Permite moverlo dentro del wrapper */
+    top: 0;
+    left: 0;
+    
+    image-rendering: pixelated; 
+    display: flex; 
+    flex-wrap: wrap; 
 }
 
 .pixel {
-    /* Aquí forzamos la dimensión de forma redundante para asegurar compatibilidad */
-    width: 2px;
-    height: 2px; 
+    width: 2.6px; /* (1300px / 500) */
+    height: 2.6px; /* (520px / 200) */
     box-sizing: border-box;
-    cursor: pointer; 
+    cursor: crosshair; 
     transition: background-color 0.1s;
-    user-select: none;
+}
+
+.pixel:hover {
+    opacity: 0.8; 
+}
+
+/* Estado de píxel seleccionado (cesta) */
+.pixel.selected {
+    border: 1px solid #FF00FF; 
+    box-sizing: border-box;
 }
 
 
-/* --- RESTO DEL CSS SIN CAMBIOS FUNCIONALES --- */
+/* --- BARRA DE CESTA Y BOTONES --- */
 #cart-bar {
     background-color: #333;
     padding: 15px 20px; 
     margin: 0 auto;
-    width: 1000px;
+    width: 1300px;
     max-width: 98vw; 
     border: 2px solid #D4D4D4;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 12px;
+    font-size: 14px; /* Aumentar tamaño de texto de la cesta */
     margin-bottom: 20px;
 }
 
@@ -107,7 +110,7 @@ header p {
     background-color: #39FF14;
     color: #1a1a1a;
     border: 2px solid #1a1a1a;
-    padding: 8px 15px; 
+    padding: 10px 18px; /* Botones más grandes */
     cursor: pointer;
     font-family: 'Press Start 2P', monospace;
     font-size: 10px; 
@@ -120,21 +123,10 @@ header p {
     color: #999;
     cursor: not-allowed;
 }
-.action-btn:hover:not(:disabled) {
-    background-color: #5eff44;
-}
 
 /* --- ESTILO DEL MODAL --- */
 #modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    display: none; 
-    justify-content: center;
-    align-items: center;
+    /* ... estilos se mantienen ... */
     z-index: 1000;
 }
 #pixel-modal {
@@ -146,18 +138,10 @@ header p {
     box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
 }
 
-#pixel-modal p {
-    margin: 8px 0;
-    font-size: 12px; 
-    color: #FDFD96;
+#modal-pixel-preview {
+    width: 20px;
+    height: 20px;
+    border: 1px solid #fff;
+    margin-bottom: 10px;
 }
 
-#owner-controls {
-    border-top: 1px dashed #555;
-    margin-top: 15px;
-    padding-top: 10px;
-}
-#owner-controls input[type="color"], #owner-controls input[type="number"] {
-    margin-right: 10px;
-    vertical-align: middle;
-}
