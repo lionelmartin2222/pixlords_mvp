@@ -1,4 +1,4 @@
-/* ========================= app.js: VERSIÓN 8.1 - ZOOM IMPLANTADO ========================= */
+/* ========================= app.js: VERSIÓN 8.2 - ESTABILIDAD Y ZOOM GARANTIZADOS ========================= */
 
 // --- CONFIGURACIÓN DEL MAPA ---
 const WIDTH = 500; 
@@ -22,7 +22,7 @@ const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a922Aa845041";
 // --- COLORES FINALES DE LA UI ---\nconst LAND_COLOR = '#008000'; // Tierra\nconst SEA_COLOR = '#0000FF'; // Mar\n\n// --- FUNCIÓN DE COORDENADAS AMIGABLES ---\nconst COORD_MAP_TO_UI = (x, y) => {\n    let colStr = '';\n    let i = x;\n    while (i >= 0) {\n        colStr = String.fromCharCode(i % 26 + 'A'.charCodeAt(0)) + colStr;\n        i = Math.floor(i / 26) - 1;\n    }\n    const rowStr = y + 1; \n    return `${colStr}-${rowStr}`;\n};
 
 // =========================================================
-// INICIO DE LA LÓGICA DE ZOOM Y PANORÁMICA (NUEVO CÓDIGO)
+// LÓGICA DE ZOOM Y PANORÁMICA (AJUSTADA PARA COMPATIBILIDAD)
 // =========================================================
 
 // Estado de Zoom/Panorámica
@@ -31,8 +31,6 @@ let offsetX = 0;
 let offsetY = 0;
 let isDragging = false;
 let lastX, lastY;
-let dragStartX = 0; 
-let dragStartY = 0;
 let mapContainer; // Referencia al div principal del mapa
 
 function updateTransform() {
@@ -40,7 +38,7 @@ function updateTransform() {
     // Aplicar el zoom/pan al contenedor del mapa usando CSS transform
     mapContainer.style.transform = `scale(${scale})`;
     // Ajuste de posición (panorámica)
-    mapContainer.style.transformOrigin = '0 0'; // Cambiado a 0 0 para simplificar el cálculo del arrastre
+    mapContainer.style.transformOrigin = '0 0';
     mapContainer.style.left = `${offsetX}px`; 
     mapContainer.style.top = `${offsetY}px`;
 }
@@ -52,34 +50,14 @@ function startDrag(event) {
     lastX = event.clientX || event.touches[0].clientX;
     lastY = event.clientY || event.touches[0].clientY;
     
-    dragStartX = lastX; 
-    dragStartY = lastY;
-    
     mapContainer.style.cursor = 'grabbing';
     event.preventDefault(); 
 }
 
 function endDrag(event) {
-    const CLICK_THRESHOLD = 5; 
-    
     if (isDragging) {
         isDragging = false;
         mapContainer.style.cursor = 'grab';
-
-        const finalX = event.clientX || (event.changedTouches ? event.changedTouches[0].clientX : lastX);
-        const finalY = event.clientY || (event.changedTouches ? event.changedTouches[0].clientY : lastY);
-        
-        const dx = Math.abs(finalX - dragStartX);
-        const dy = Math.abs(finalY - dragStartY);
-
-        // Si no fue un arrastre significativo, manejarlo como clic (llamando a la función original)
-        if (dx < CLICK_THRESHOLD && dy < CLICK_THRESHOLD) {
-            const pixelElement = event.target.closest('.pixel');
-            if (pixelElement) {
-                // Simula el evento de click original para no romper la lógica existente
-                handlePixelClick({ target: pixelElement, preventDefault: () => {} }); 
-            }
-        }
     }
 }
 
@@ -199,6 +177,8 @@ function initializeMapData() {
 
 function renderMap() {
     mapContainer = document.getElementById(MAP_CONTAINER_ID); // <--- Asignación de la variable global aquí
+    if (!mapContainer) return; // FIX: Aseguramos que el contenedor exista
+    
     mapContainer.innerHTML = ''; 
 
     mapData.forEach(pixel => {
@@ -213,8 +193,9 @@ function renderMap() {
         pixelElement.dataset.x = pixel.x;
         pixelElement.dataset.y = pixel.y;
 
-        // Se reemplaza el listener de click y se usa mousedown y mouseup para manejar el arrastre
-        // pixelElement.addEventListener('click', handlePixelClick); <-- ELIMINADO
+        // --- CONEXIÓN ORIGINAL DEL CLICK (RE-ESTABLECIDA) ---
+        pixelElement.addEventListener('click', handlePixelClick); 
+        // ----------------------------------------------------
         
         pixelElement.addEventListener('contextmenu', handlePixelRightClick); 
 
@@ -222,7 +203,7 @@ function renderMap() {
     });
     
     // ==============================================
-    // IMPLANTACIÓN CRÍTICA DE EVENTOS DE MOUSE
+    // IMPLANTACIÓN CRÍTICA DE EVENTOS DE MOUSE (SÓLO PARA ZOOM/PAN)
     // ==============================================
     mapContainer.addEventListener('mousedown', startDrag);
     mapContainer.addEventListener('mouseup', endDrag);
@@ -233,6 +214,9 @@ function renderMap() {
 }
 
 function handlePixelClick(event) {
+    // Si estamos arrastrando, no ejecutar el click (previene errores de zoom)
+    if (isDragging) return;
+    
     const pixelElement = event.target;
     const x = parseInt(pixelElement.dataset.x);
     const y = parseInt(pixelElement.dataset.y);
@@ -385,3 +369,4 @@ document.addEventListener('DOMContentLoaded', () => {
         hideModal();
     });
 });
+
