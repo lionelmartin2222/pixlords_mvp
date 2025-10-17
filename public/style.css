@@ -1,4 +1,4 @@
-/* ========================= style.css: VERSIÓN 6.2 (SOLUCIÓN FINAL GRID) ========================= */
+/* ========================= style.css: VERSIÓN 6.3 (ULTIMA SOLUCIÓN DE RENDERING) ========================= */
 
 /* Importar fuente pixel art */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -57,11 +57,10 @@ header p {
     image-rendering: pixelated; 
     cursor: grab; 
     
-    /* === FIX CRÍTICO: USAR TAMAÑO FIJO (2px) PARA CADA PÍXEL === */
+    /* === SOLUCIÓN FINAL DE RENDERING: FORZAR GRID y usar 2px en el PIXEL === */
     display: grid; 
-    /* Cada columna debe tener 2px de ancho para que el total sea 1000px (500 * 2) */
+    /* Usamos 2px explícitos por píxel. Total 500 * 2px = 1000px. */
     grid-template-columns: repeat(500, 2px); 
-    /* Cada fila debe tener 2px de alto para que el total sea 400px (200 * 2) */
     grid-template-rows: repeat(200, 2px);   
     /* ========================================================= */
 
@@ -70,7 +69,9 @@ header p {
 }
 
 .pixel {
-    /* Los píxeles ya no necesitan width/height ya que el grid lo define */
+    /* Aquí forzamos la dimensión de forma redundante para asegurar compatibilidad */
+    width: 2px;
+    height: 2px; 
     box-sizing: border-box;
     cursor: pointer; 
     transition: background-color 0.1s;
