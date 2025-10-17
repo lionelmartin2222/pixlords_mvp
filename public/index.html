@@ -12,12 +12,14 @@
         <h1>PIXLORDS</h1> 
         <p>¡Sé el Señor de los Píxeles!</p>
         <div id="wallet-info">
+            <!-- NOTA: Se añade la clase 'action-btn' para el estilo -->
             <button id="connect-wallet" class="action-btn">Conectar Billetera (MetaMask)</button>
             <p>Estado: <span id="status-message">Desconectado</span></p>
         </div>
     </header>
     
     <main>
+        <!-- BARRA DE CESTA -->
         <div id="cart-bar">
             <span id="cart-summary">Cesta: 0 píxeles seleccionados | Total: 0.00 USDC</span>
             <div>
@@ -26,21 +28,29 @@
             </div>
         </div>
         
-        <div id="pixel-map-container">
+        <!-- CONTENEDOR DE ZOOM Y MAPA -->
+        <!-- Se añade el wrapper para manejar el arrastre y el zoom -->
+        <div id="map-interaction-wrapper">
+            <div id="pixel-map-container">
+                <!-- El mapa se renderiza directamente aquí por JS -->
             </div>
+        </div>
     </main>
 
+    <!-- MODAL (Ventana emergente para info/compra/reventa) -->
     <div id="modal-backdrop" style="display: none;">
         <div id="pixel-modal">
             <h2>Información del Píxel <span id="modal-coords"></span></h2>
-            <p><strong>Precio:</strong> <span id="modal-price"></span></p>
-            <p><strong>Propietario:</strong> <span id="modal-owner"></span></p>
+            <p><strong>Precio:</strong> <span id="modal-price">1.00 USDC</span></p>
+            <p><strong>Propietario:</strong> <span id="modal-owner">Nadie</span></p>
             <p><strong>Color Actual:</strong> <span id="modal-color-display"></span></p>
             
             <div id="buy-controls">
+                <!-- Botón de compra/añadir a cesta -->
                 <button id="buy-pixel-btn" class="action-btn">Comprar</button>
             </div>
 
+            <!-- Controles del Dueño -->
             <div id="owner-controls" style="display: none;">
                 <p style="color: #39FF14;">Control del Propietario:</p>
                 <label for="new-color">Nuevo Color:</label>
@@ -58,6 +68,7 @@
         </div>
     </div>
 
+    <!-- Carga de librerías y script principal -->
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script> 
     <script src="app.js"></script>
 </body>
