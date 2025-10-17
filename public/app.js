@@ -189,6 +189,10 @@
         let offsetY = 0;
         let isDragging = false;
         let lastX, lastY;
+        // NUEVAS VARIABLES para rastrear el inicio del clic/arrastre
+        let dragStartX = 0;
+        let dragStartY = 0;
+
 
         // Definición de colores para cada tipo de territorio
         const COLOR_MAP = {
@@ -403,11 +407,20 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
         // ====================================================================
 
         function initInteractions() {
+            // Eventos de ratón
             canvas.addEventListener('mousedown', startDrag);
             canvas.addEventListener('mouseup', endDrag);
             canvas.addEventListener('mousemove', drag);
             canvas.addEventListener('mouseleave', endDrag);
             canvas.addEventListener('wheel', zoom);
+            // Evento de clic directo (seguridad)
+            canvas.addEventListener('click', (e) => {
+                // Si no estamos en un ciclo de arrastre/arrastre, se procesa el clic.
+                if (!isDragging) {
+                    handlePixelClick(e);
+                }
+            });
+
 
             // Soporte táctil
             canvas.addEventListener('touchstart', (e) => {
@@ -436,6 +449,10 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
             isDragging = true;
             lastX = event.clientX || event.pageX;
             lastY = event.clientY || event.pageY;
+            // Guardar posición inicial para determinar si fue un clic
+            dragStartX = lastX; 
+            dragStartY = lastY;
+            
             canvas.style.cursor = 'grabbing';
             // Previene la selección de texto en algunos navegadores
             event.preventDefault(); 
@@ -443,22 +460,28 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 
         function endDrag(event) {
             // Usamos un pequeño umbral de distancia para distinguir entre arrastre y clic.
-            const threshold = 5; 
+            const CLICK_THRESHOLD = 5; 
             
             if (isDragging) {
                 isDragging = false;
                 canvas.style.cursor = 'grab';
 
-                const clientX = event.clientX || (event.changedTouches ? event.changedTouches[0].clientX : lastX);
-                const clientY = event.clientY || (event.changedTouches ? event.changedTouches[0].clientY : lastY);
+                // Obtener coordenadas finales (manejando mouse y touch)
+                const finalX = event.clientX || (event.changedTouches ? event.changedTouches[0].clientX : lastX);
+                const finalY = event.clientY || (event.changedTouches ? event.changedTouches[0].clientY : lastY);
                 
-                const dx = Math.abs(clientX - lastX);
-                const dy = Math.abs(clientY - lastY);
+                const dx = Math.abs(finalX - dragStartX);
+                const dy = Math.abs(finalY - dragStartY);
 
                 // Si se movió menos que el umbral, se considera un clic
-                if (dx < threshold && dy < threshold) {
-                    handlePixelClick(event);
+                if (dx < CLICK_THRESHOLD && dy < CLICK_THRESHOLD) {
+                    // Llamar a handlePixelClick con el evento original (o evento táctil final)
+                    // Nota: Si el evento es 'touchend', debemos usar event.changedTouches[0]
+                    const clickEvent = event.changedTouches ? event.changedTouches[0] : event;
+                    handlePixelClick(clickEvent);
                 }
+                
+                // Si fue un arrastre, drawMap ya se llamó en drag()
             }
         }
 
