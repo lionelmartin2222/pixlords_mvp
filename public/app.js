@@ -507,6 +507,13 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 
         function setupCanvas() {
             const container = document.getElementById('map-wrap');
+            canvas = document.getElementById('mapCanvas'); // Aseguramos que 'canvas' está definido aquí también
+            
+            if (!canvas) {
+                logToDApp("ERROR: Elemento 'mapCanvas' no encontrado.", true);
+                return;
+            }
+
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight; // Usa la altura definida por CSS (aspect-ratio 5:2)
 
@@ -534,24 +541,38 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
             logToDApp("Inicialización de la aplicación Pixlords completada. El mapa está listo.", false);
 
             canvas = document.getElementById('mapCanvas');
+            // Doble comprobación y asignación de contexto
+            if (!canvas) {
+                logToDApp("ERROR CRÍTICO: No se pudo obtener el elemento Canvas.", true);
+                return;
+            }
             ctx = canvas.getContext('2d');
-
+            
             initializeMapData();
-            setupCanvas();
+            setupCanvas(); // setupCanvas ahora también define canvas y ctx si es necesario.
             initInteractions();
 
             // Llamada inicial para asegurar el dibujo
             drawMap();
         }
+        
+        // Ejecutar inicialización después de que el DOM esté completamente cargado.
+        document.addEventListener('DOMContentLoaded', () => {
+             // Mostrar indicador de carga hasta que se complete la autenticación/inicialización
+            document.getElementById('loading-indicator').classList.remove('hidden');
 
-        // Mostrar indicador de carga hasta que se complete la autenticación/inicialización
-        document.getElementById('loading-indicator').classList.remove('hidden');
-
-        // Si la autenticación ya está lista (en el caso de que el script de auth cargue primero), inicializar.
-        // Si no, la inicialización será llamada por el script de Firebase (setupAuth -> onAuthStateChanged).
-        if (window.isAuthReady) {
-            window.initApp();
-        }
+            // Si la autenticación ya está lista (en el caso de que el script de auth cargue primero), inicializar.
+            // Si no, la inicialización será llamada por el script de Firebase (setupAuth -> onAuthStateChanged).
+            if (window.isAuthReady) {
+                window.initApp();
+            }
+            
+            // Fallback: Si Firebase no está configurado (keys vacías), forzar la inicialización 
+            // de la aplicación para mostrar el mapa, ya que la lógica de auth no se ejecutará.
+            if (typeof __firebase_config === 'undefined' || Object.keys(JSON.parse(__firebase_config)).length === 0) {
+                 window.initApp();
+            }
+        });
 
     </script>
 </body>
