@@ -1,4 +1,4 @@
-/* ========================= app.js: VERSIÓN 8.2 - ESTABILIDAD Y ZOOM GARANTIZADOS ========================= */
+/* ========================= app.js: VERSIÓN 8.3 - SOLUCIÓN DE INICIALIZACIÓN FINAL ========================= */
 
 // --- CONFIGURACIÓN DEL MAPA ---
 const WIDTH = 500; 
@@ -348,10 +348,16 @@ function executeBatchPurchase() {
 
 // --- INICIALIZACIÓN ---
 
-document.addEventListener('DOMContentLoaded', () => {
+function initialize() {
     initializeMapData();
     renderMap();
     
+    // Si el mapa no se encontró, lo volvemos a intentar
+    if (!mapContainer) {
+        // console.error("Contenedor del mapa no encontrado. Reintentando...");
+        return; 
+    }
+
     document.getElementById('connect-wallet').addEventListener('click', connectWallet);
     document.getElementById('pay-batch-btn').addEventListener('click', executeBatchPurchase);
     document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
@@ -368,5 +374,14 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`Simulación: Poniendo píxel en venta por ${newPrice} USDC.`);
         hideModal();
     });
-});
+}
+
+
+// FIX FINAL: Intentamos inicializar en los dos momentos más seguros.
+
+// 1. DOMContentLoaded (El momento más rápido, preferido)
+document.addEventListener('DOMContentLoaded', initialize);
+
+// 2. window.onload (El más lento y seguro, garantiza que todos los elementos HTML estén cargados)
+window.onload = initialize;
 
