@@ -284,7 +284,8 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 
         // Función principal para dibujar el mapa
         function drawMap() {
-            if (!ctx || mapData.length === 0) return; // Comprobación añadida para datos
+            // VERIFICACIÓN CLAVE: El contexto debe existir para dibujar
+            if (!ctx || mapData.length === 0) return; 
             
             // Se asume que todas las filas tienen el mismo ancho
             const actualHeight = mapData.length;
@@ -311,7 +312,7 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
                     // Opcional: Borde para mejor distinción de píxeles
                     ctx.strokeStyle = '#00000010'; // Borde muy sutil
                     ctx.lineWidth = 0.2;
-                    ctx.strokeRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+                    ctx.strokeRect(x * PIXEL_SIZE, x * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
                 }
             }
 
@@ -558,14 +559,23 @@ WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 
         // Nueva función principal para inicializar SOLO el mapa (independiente de Firebase)
         function initializeMap() {
+            // Log de ejecución
+            logToDApp("Intentando inicializar Canvas y Mapa...");
+
             if (window.mapInitialized) return;
 
             canvas = document.getElementById('mapCanvas');
             if (!canvas) {
-                logToDApp("ERROR CRÍTICO: No se pudo obtener el elemento Canvas para inicializar.", true);
+                logToDApp("ERROR CRÍTICO: No se pudo obtener el elemento Canvas (DOM no listo o ID incorrecto).", true);
                 return;
             }
+            
+            // CORRECCIÓN CLAVE: Obtener y validar el contexto
             ctx = canvas.getContext('2d');
+            if (!ctx) {
+                logToDApp("ERROR CRÍTICO: No se pudo obtener el contexto 2D del Canvas.", true);
+                return;
+            }
 
             initializeMapData();
             setupCanvas();
