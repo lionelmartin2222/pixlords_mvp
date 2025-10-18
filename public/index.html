@@ -3,8 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixlords: Sé el Señor de los Píxeles</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Pixlords: El Primer Juego de Propiedad de Píxeles en Blockchain</title>
+    <style>
+        /* ========================= CSS: VERSION 7.0 (AJUSTES FINALES) ========================= */
+
+        /* Fuente: Estilo Pixel Art */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #1a1a1a; 
+            color: #FDFD96; 
+            text-align: center;
+            margin: 0;
+            padding: 30px 10px;
+            font-size: 14px; 
+            line-height: 1.5; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            margin-bottom: 50px; 
+            width: 100%;
+            max-width: 1300px;
+        }
+
+        h1 {
+            font-size: 48px; /* Título más grande */
+            color: #39FF14; /* Verde Neón */
+            text-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00;
+            margin-bottom: 5px; 
+        }
+        header p {
+            font-size: 16px; 
+            color: #00FFCC; /* Cyan para el subtítulo */
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+
+        #wallet-info {
+            font-size: 14px;
+            color: #D4D4D4;
+            margin-bottom: 25px;
+        }
+
+        /* Contenedor del mapa y el wrapper de interacción */
+        #map-wrapper {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        #map-container {
+            width: 1300px;
+            height: 520px;
+            max-width: 100%;
+            overflow: hidden;
+            margin: 20px auto;
+            
+            border: 4px solid #00FFCC;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.8), 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+
+        #map-interaction-wrapper {
+            width: 1300px;
+            height: 520px;
+            cursor: grab;
+            overflow: hidden;
+            
+        }
+
+        #pixel-map-container {
+            /* El tamaño base del mapa es 500x200 píxeles lógicos */
+            /* Se establece el tamaño aquí para que el zoom inicial funcione */
+            width: 500px; 
+            height: 200px; 
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
+            display: grid;
+            grid-template-columns: repeat(500, 1fr);
+            grid-template-rows: repeat(200, 1fr);
+            touch-action: none; /* Prevenir comportamiento por defecto de scroll en touch */
+            
+        }
+
+        .pixel {
+            /* El tamaño del pixel se ajusta para llenar el contenedor del mapa */
+            width: 100%; 
+            height: 100%;
+            display: block;
+        }
+
+        .pixel.selected {
+            outline: 1px solid #FF00FF; /* Borde de selección neón */
+            outline-offset: -1px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        /* --- ESTILOS DE BOTONES --- */
+        .action-btn {
+            background-color: #39FF14;
+            color: #1a1a1a;
+            border: 2px solid #39FF14;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.2s;
+            box-shadow: 0 0 5px #39FF14;
+        }
+        .action-btn:hover:not(:disabled) {
+            background-color: #5eff44;
+            box-shadow: 0 0 10px #5eff44;
+        }
+        .action-btn:disabled {
+            background-color: #555;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* --- BARRA DE CESTA --- */
+        #cart-bar {
+            background-color: #0d0d0d;
+            padding: 15px 20px;
+            margin: 20px auto;
+            max-width: 1260px;
+            border: 2px solid #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        /* --- ESTILO DEL MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #1a1a1a;
+            border: 4px solid #39FF14;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.5);
+            padding: 30px; 
+            text-align: left;
+        }
+
+        #modal-message {
+            color: yellow;
+            margin-top: 10px;
+        }
+
+    </style>
 </head>
 <body>
 
@@ -12,9 +175,8 @@
         <h1>PIXLORDS</h1> 
         <p>¡Sé el Señor de los Píxeles!</p>
         <div id="wallet-info">
-            <!-- NOTA: Se añade la clase 'action-btn' para el estilo -->
             <button id="connect-wallet" class="action-btn">Conectar Billetera (MetaMask)</button>
-            <p>Estado: <span id="status-message">Desconectado</span></p>
+            <p>Estado: <span id="status-message">DESCONECTADO</span></p>
         </div>
     </header>
     
@@ -28,29 +190,26 @@
             </div>
         </div>
         
-        <!-- CONTENEDOR DE ZOOM Y MAPA -->
-        <!-- Se añade el wrapper para manejar el arrastre y el zoom -->
+        <!-- CONTENEDOR DE INTERACCIÓN (Para zoom y drag) -->
         <div id="map-interaction-wrapper">
+            <!-- EL MAPA EN SÍ -->
             <div id="pixel-map-container">
-                <!-- El mapa se renderiza directamente aquí por JS -->
             </div>
         </div>
     </main>
 
-    <!-- MODAL (Ventana emergente para info/compra/reventa) -->
-    <div id="modal-backdrop" style="display: none;">
-        <div id="pixel-modal">
+    <!-- MODAL DE INFORMACIÓN Y ACCIONES -->
+    <div id="info-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
             <h2>Información del Píxel <span id="modal-coords"></span></h2>
-            <p><strong>Precio:</strong> <span id="modal-price">1.00 USDC</span></p>
-            <p><strong>Propietario:</strong> <span id="modal-owner">Nadie</span></p>
+            <p><strong>Precio:</strong> <span id="modal-price"></span></p>
+            <p><strong>Propietario:</strong> <span id="modal-owner"></span></p>
             <p><strong>Color Actual:</strong> <span id="modal-color-display"></span></p>
             
             <div id="buy-controls">
-                <!-- Botón de compra/añadir a cesta -->
                 <button id="buy-pixel-btn" class="action-btn">Comprar</button>
             </div>
 
-            <!-- Controles del Dueño -->
             <div id="owner-controls" style="display: none;">
                 <p style="color: #39FF14;">Control del Propietario:</p>
                 <label for="new-color">Nuevo Color:</label>
@@ -64,12 +223,490 @@
                 <button id="sell-pixel-btn" class="action-btn">Poner en Venta</button>
             </div>
             
-            <button id="close-modal-btn" class="action-btn" style="margin-top: 15px;">Cerrar</button>
+            <button id="close-modal-btn" class="action-btn" onclick="hideModal('info-modal')">Cerrar</button>
+            <p id="modal-message" style="color: yellow;"></p>
         </div>
     </div>
 
-    <!-- Carga de librerías y script principal -->
-    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script> 
-    <script src="app.js"></script>
+    <!-- SCRIPT DEL JUEGO -->
+    <script>
+        // ====================================================================
+        // PIXLORDS - MVP - Lógica principal del juego (Frontend)
+        // ====================================================================
+
+        // --- CONFIGURACIÓN DEL MAPA ---
+        const WIDTH = 500; 
+        const HEIGHT = 200; 
+        const TOTAL_PIXELS = WIDTH * HEIGHT;
+        const INITIAL_PRICE_USDC = 1.00; 
+        
+        // --- ESTADO GLOBAL Y OBJETOS ---
+        let selectedPixels = new Set(); 
+        let mapData = []; 
+        let currentAccount = null; 
+        let currentPixel = { x: null, y: null }; 
+        let pixelContract; 
+
+        // --- VARIABLES DE ZOOM/ARRRASTRE ---
+        let WRAPPER;
+        let MAP_ELEMENT;
+        let scale = 1.0;
+        let position = { x: 0, y: 0 };
+        let isDragging = false;
+        let startDrag = { x: 0, y: 0 };
+        let currentDrag = { x: 0, y: 0 };
+
+
+        // --- PLACEHOLDERS DE BLOCKCHAIN (NECESARIOS PARA MUHAMMAD) ---
+        const CONTRACT_ADDRESS = "DIRECCION_DE_CONTRATO_AQUI"; 
+        const PIXEL_CONTRACT_ABI = []; 
+        const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a922Aa845041"; 
+
+        // --- COLORES ---
+        const LAND_COLOR = '#008000'; // Verde
+        const SEA_COLOR = '#0000FF'; // Azul
+
+        // --- FUNCIÓN DE COORDENADAS AMIGABLES ---
+        const COORD_MAP_TO_UI = (x, y) => {
+            let colStr = '';
+            let tempX = x;
+            while (tempX >= 0) {
+                colStr = String.fromCharCode(tempX % 26 + 'A'.charCodeAt(0)) + colStr;
+                tempX = Math.floor(tempX / 26) - 1;
+            }
+            const rowStr = y + 1; 
+            return `${colStr}-${rowStr}`;
+        };
+
+        // =========================================================
+        // PARTE I: MAPA GENERATIVO Y LÓGICA DE INICIALIZACIÓN
+        // =========================================================
+        
+        // Esta función genera un mapa irregular con una masa continental central
+        // Sustituye la matriz gigante para garantizar la estabilidad del código.
+        function getInitialMapColor(x, y) {
+            const centerX = WIDTH / 2; 
+            const centerY = HEIGHT / 2; 
+            
+            // Coeficientes que definen la forma general (más ancha que alta)
+            const factorX = 0.5; 
+            const factorY = 0.8;
+            
+            // Distancia elíptica desde el centro (para una forma más orgánica)
+            const dist = Math.sqrt(
+                Math.pow((x - centerX) / factorX, 2) + 
+                Math.pow((y - centerY) / factorY, 2)
+            );
+
+            // Ruido: Añade irregularidad a los bordes (como costas)
+            // Se usa el seno y el coseno para generar ondulaciones naturales
+            const noise = Math.sin(x * 0.05) * 10 + Math.cos(y * 0.08) * 10;
+            
+            // El radio base del continente, ajustado por el ruido
+            const baseRadius = 400;
+
+            // Simulación de un lago interior (un área de agua dentro de la tierra)
+            const isLake = (x > 180 && x < 320 && y > 80 && y < 120);
+            const lakeDist = Math.sqrt(Math.pow(x - 250, 2) + Math.pow(y - 100, 2));
+
+            let color = SEA_COLOR;
+            
+            if (dist < (baseRadius + noise)) {
+                color = LAND_COLOR;
+                
+                // Si es tierra y cae dentro del área del lago, es agua
+                if (isLake && lakeDist < 60) {
+                    color = SEA_COLOR;
+                }
+            }
+            
+            // Simulación de pequeñas islas aleatorias (para romper la uniformidad del mar)
+            if (Math.random() < 0.001) { 
+                if (color === SEA_COLOR) {
+                    color = LAND_COLOR;
+                }
+            }
+            
+            return color; 
+        }
+
+        // Lógica de Mapeo: '1' -> LAND_COLOR, '0' -> SEA_COLOR
+        function initializeMapData() {
+            // Inicialización de datos con la lógica del mapa orgánico
+            for (let y = 0; y < HEIGHT; y++) {
+                for (let x = 0; x < WIDTH; x++) {
+                    const index = y * WIDTH + x;
+                    
+                    const color = getInitialMapColor(x, y);
+
+                    // Estado inicial para el Hard Reset de lanzamiento (Todos Libres)
+                    const isOwned = false; 
+                    const owner = 'Libre'; 
+                    const price = INITIAL_PRICE_USDC; 
+
+                    mapData[index] = {
+                        x,
+                        y,
+                        color: color,
+                        owner: owner,
+                        price: price,
+                        isOwned: isOwned
+                    };
+                }
+            }
+        }
+
+        // Dibuja los píxeles en el contenedor HTML
+        function renderMap() {
+            MAP_ELEMENT.innerHTML = ''; 
+
+            mapData.forEach(pixel => {
+                const pixelElement = document.createElement('div');
+                pixelElement.className = 'pixel';
+                pixelElement.style.backgroundColor = pixel.color;
+                
+                // Estos atributos son necesarios para la lógica de selección y modal
+                pixelElement.dataset.x = pixel.x;
+                pixelElement.dataset.y = pixel.y;
+
+                pixelElement.addEventListener('click', handlePixelClick);
+                pixelElement.addEventListener('contextmenu', handlePixelRightClick); 
+
+                MAP_ELEMENT.appendChild(pixelElement);
+            });
+        }
+
+        // =========================================================
+        // PARTE II: LÓGICA DE INTERACCIÓN (ZOOM Y ARRASTRE)
+        // =========================================================
+
+        function applyTransform() {
+            // Asegura que el mapa se vea en su posición y escala correctas
+            MAP_ELEMENT.style.transform = `translate(${position.x}px, ${position.y}px) scale(${scale})`;
+        }
+
+        function handleZoom(event) {
+            event.preventDefault();
+            // Determina la dirección del zoom y calcula la nueva escala
+            const delta = event.deltaY > 0 ? -0.1 : 0.1;
+            const newScale = Math.min(Math.max(1.0, scale + delta), 5.0); 
+
+            // Calcula el punto focal del zoom
+            const rect = MAP_ELEMENT.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            // Ajusta la posición para mantener el punto bajo el cursor (fórmula de zoom)
+            const oldScale = scale;
+            scale = newScale;
+
+            const ratio = oldScale / newScale;
+
+            position.x = mouseX - (mouseX - position.x) * ratio;
+            position.y = mouseY - (mouseY - position.y) * ratio;
+
+            // Restricción de límites (para que el mapa no se salga completamente de vista)
+            const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
+            const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
+
+
+            position.x = Math.max(Math.min(position.x, 0), -maxTranslateX);
+            position.y = Math.max(Math.min(position.y, 0), -maxTranslateY);
+
+            applyTransform();
+        }
+
+        function handleMouseDown(event) {
+            if (event.button !== 0 || scale === 1.0) return; // Solo botón izquierdo y solo si hay zoom
+            isDragging = true;
+            WRAPPER.style.cursor = 'grabbing';
+            startDrag = { x: event.clientX - position.x, y: event.clientY - position.y };
+            event.preventDefault(); 
+        }
+
+        function handleMouseMove(event) {
+            if (!isDragging) return;
+            
+            const dx = event.clientX - startDrag.x;
+            const dy = event.clientY - startDrag.y;
+            
+            // Calcula los límites de arrastre
+            const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
+            const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
+
+            // Aplica límites al nuevo desplazamiento
+            position.x = Math.max(Math.min(dx, 0), -maxTranslateX);
+            position.y = Math.max(Math.min(dy, 0), -maxTranslateY);
+
+            applyTransform();
+        }
+
+        function handleMouseUp() {
+            isDragging = false;
+            WRAPPER.style.cursor = 'grab';
+        }
+
+        // --- Lógica Touch (Para compatibilidad móvil) ---
+        let lastTouch = null;
+
+        function handleTouchStart(event) {
+            if (scale === 1.0) return;
+            const touch = event.touches[0];
+            isDragging = true;
+            lastTouch = { x: touch.clientX, y: touch.clientY };
+        }
+
+        function handleTouchMove(event) {
+            if (!isDragging || event.touches.length > 1) return; // Ignorar zoom de pellizco
+            const touch = event.touches[0];
+            const dx = touch.clientX - lastTouch.x;
+            const dy = touch.clientY - lastTouch.y;
+
+            position.x += dx;
+            position.y += dy;
+            lastTouch = { x: touch.clientX, y: touch.clientY };
+
+            // Aplicar restricciones de límites (la misma lógica de MouseMove)
+            const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
+            const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
+
+            position.x = Math.max(Math.min(position.x, 0), -maxTranslateX);
+            position.y = Math.max(Math.min(position.y, 0), -maxTranslateY);
+
+            applyTransform();
+            event.preventDefault();
+        }
+
+        function handleTouchEnd() {
+            isDragging = false;
+            lastTouch = null;
+        }
+
+        // =========================================================
+        // PARTE III: LÓGICA DE NEGOCIO (SELECCIÓN Y MODAL)
+        // =========================================================
+
+        function handlePixelClick(event) {
+            const pixelElement = event.target;
+            const x = parseInt(pixelElement.dataset.x);
+            const y = parseInt(pixelElement.dataset.y);
+            const index = y * WIDTH + x;
+            const pixel = mapData[index];
+
+            showModal(pixel, pixelElement);
+        }
+
+        function handlePixelRightClick(event) {
+            const targetElement = event.target;
+            
+            if (event.preventDefault) {
+                event.preventDefault(); 
+            }
+            
+            const x = parseInt(targetElement.dataset.x);
+            const y = parseInt(targetElement.dataset.y);
+            const id = `${x}-${y}`; // Usamos guion para el Set, ver clearCart
+            const pixel = mapData[y * WIDTH + x];
+
+            // Solo puedes seleccionar píxeles que NO estén ya comprados
+            if (!pixel.isOwned) {
+                if (selectedPixels.has(id)) {
+                    selectedPixels.delete(id);
+                    targetElement.classList.remove('selected');
+                } else {
+                    selectedPixels.add(id);
+                    targetElement.classList.add('selected');
+                }
+                updateCartSummary();
+            } else {
+                // Mensaje simple si intenta seleccionar un píxel ya comprado
+                const modal = document.getElementById('info-modal');
+                const message = modal.querySelector('#modal-message');
+                message.textContent = "Este píxel ya está comprado. Haz clic izquierdo para ver detalles.";
+                setTimeout(() => { message.textContent = ""; }, 3000); 
+            }
+        }
+
+        function updateCartSummary() {
+            const count = selectedPixels.size;
+            const totalCost = count * INITIAL_PRICE_USDC; 
+            
+            document.getElementById('cart-summary').textContent = 
+                `Cesta: ${count} píxeles seleccionados | Total: ${totalCost.toFixed(2)} USDC`;
+                
+            document.getElementById('pay-batch-btn').disabled = count === 0;
+        }
+
+        function clearCart() {
+            selectedPixels.forEach(id => {
+                const [x, y] = id.split('-').map(Number);
+                const element = MAP_ELEMENT.querySelector(`.pixel[data-x="${x}"][data-y="${y}"]`);
+                if (element) {
+                    element.classList.remove('selected');
+                }
+            });
+            selectedPixels.clear();
+            updateCartSummary();
+        }
+
+        function showModal(pixel, element) {
+            const modal = document.getElementById('info-modal');
+            
+            document.getElementById('modal-coords').textContent = COORD_MAP_TO_UI(pixel.x, pixel.y);
+            document.getElementById('modal-price').textContent = `${pixel.price.toFixed(2)} USDC`;
+            document.getElementById('modal-owner').textContent = pixel.owner;
+            
+            // Asigna el color real del píxel a un elemento visible en el modal
+            const colorDisplay = document.getElementById('modal-color-display');
+            colorDisplay.style.width = '20px'; 
+            colorDisplay.style.height = '20px';
+            colorDisplay.style.display = 'inline-block';
+            colorDisplay.style.verticalAlign = 'middle';
+            colorDisplay.style.backgroundColor = pixel.color;
+            colorDisplay.style.border = '1px solid #FDFD96';
+
+            // Lógica de visualización de controles
+            // Nota: currentAccount es nulo si no está conectado, simulando "no dueño"
+            const isUserOwner = (currentAccount && pixel.owner === currentAccount); 
+
+            document.getElementById('owner-controls').style.display = isUserOwner ? 'block' : 'none'; 
+            const buyBtn = document.getElementById('buy-pixel-btn');
+
+            if (!pixel.isOwned) {
+                buyBtn.textContent = 'AÑADIR A CESTA (Lote)';
+                buyBtn.onclick = () => {
+                    handlePixelRightClick({ preventDefault: () => {}, target: element });
+                    hideModal('info-modal');
+                };
+            } else {
+                buyBtn.textContent = `COMPRAR (Reventa) por ${pixel.price.toFixed(2)} USDC`;
+                buyBtn.onclick = () => {
+                    // Llamada al placeholder de compra individual
+                    alertPlaceholder('Compra Individual/Reventa iniciada. Esperando conexión blockchain.');
+                    hideModal('info-modal');
+                };
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function hideModal(id) {
+            document.getElementById(id).style.display = 'none';
+            document.getElementById('modal-message').textContent = "";
+        }
+        
+        // Función placeholder para evitar el alert() nativo
+        function alertPlaceholder(message) {
+            console.log("ALERTA PLACEHOLDER: " + message);
+            // Implementación de un modal de mensaje simple (opcional)
+        }
+
+        // =========================================================
+        // PARTE IV: CONEXIÓN REAL A BLOCKCHAIN (PLACEHOLDERS) Y SETUP
+        // =========================================================
+
+        // ** ESTAS FUNCIONES SERÁN REEMPLAZADAS POR EL CÓDIGO DE MUHAMMAD **
+        async function connectWallet() {
+            const statusMessage = document.getElementById('status-message');
+            const connectBtn = document.getElementById('connect-wallet');
+            
+            if (window.ethereum) {
+                try {
+                    // Simulación de solicitud de conexión real
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    currentAccount = accounts[0];
+                    statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
+                    connectBtn.textContent = 'Desconectar';
+                    statusMessage.style.color = '#39FF14'; 
+                    connectBtn.onclick = disconnectWallet;
+                    
+                    // Inicializar Ethers provider y contract (PLACEHOLDER)
+                    // provider = new ethers.providers.Web3Provider(window.ethereum);
+                    // signer = provider.getSigner();
+                    // pixelContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, signer);
+                    
+                    alertPlaceholder("Conexión de billetera exitosa.");
+
+                } catch (error) {
+                    console.error("Error al conectar la billetera:", error);
+                    statusMessage.textContent = 'Error de Conexión';
+                    statusMessage.style.color = 'red';
+                }
+            } else {
+                alertPlaceholder("MetaMask no detectado. Por favor instálelo.");
+            }
+        }
+
+        function disconnectWallet() {
+            currentAccount = null;
+            const statusMessage = document.getElementById('status-message');
+            const connectBtn = document.getElementById('connect-wallet');
+            
+            statusMessage.textContent = 'DESCONECTADO';
+            connectBtn.textContent = 'Conectar Billetera (MetaMask)';
+            statusMessage.style.color = '#FDFD96'; 
+            connectBtn.onclick = connectWallet;
+            alertPlaceholder("Billetera desconectada.");
+        }
+
+        function executeBatchPurchase() {
+            if (selectedPixels.size > 0) {
+                // Aquí iría la lógica REAL de Muhammad:
+                // 1. Aprobar USDC (si es la primera vez)
+                // 2. Llamar a pixelContract.buyMultiplePixels(pixelCoords, totalCost)
+                
+                alertPlaceholder(`Compra por LOTE de ${selectedPixels.size} píxeles iniciada. Esperando transacción blockchain.`);
+                
+                // Simulación de éxito después de la transacción
+                // for (const id of selectedPixels) {
+                //     const [x, y] = id.split('-').map(Number);
+                //     mapData[y * WIDTH + x].isOwned = true;
+                //     mapData[y * WIDTH + x].owner = currentAccount;
+                // }
+                // renderMap(); // Re-renderizar para mostrar los nuevos dueños
+                clearCart();
+            }
+        }
+
+        // =========================================================
+        // PARTE V: INICIALIZACIÓN DEL DOCUMENTO
+        // =========================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            WRAPPER = document.getElementById('map-interaction-wrapper');
+            MAP_ELEMENT = document.getElementById('pixel-map-container');
+            
+            // 1. Inicializa y dibuja el mapa (USA EL MAPA GENERATIVO ESTABLE)
+            initializeMapData();
+            renderMap();
+            
+            // 2. Configuración de eventos de Zoom y Arrastre
+            WRAPPER.addEventListener('wheel', handleZoom);
+            WRAPPER.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+
+            WRAPPER.addEventListener('touchstart', handleTouchStart);
+            WRAPPER.addEventListener('touchmove', handleTouchMove);
+            WRAPPER.addEventListener('touchend', handleTouchEnd);
+            
+            // 3. Configuración de eventos de Negocio y Billetera
+            document.getElementById('connect-wallet').addEventListener('click', connectWallet);
+            document.getElementById('pay-batch-btn').addEventListener('click', executeBatchPurchase);
+            document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
+            document.getElementById('close-modal-btn').addEventListener('click', () => hideModal('info-modal'));
+            
+            // 4. Placeholders de controles de propietario (PARA MUHAMMAD)
+            document.getElementById('set-color-btn').addEventListener('click', () => {
+                alertPlaceholder("Simulación: Cambiando color. Esperando Smart Contract.");
+                hideModal('info-modal');
+            });
+            
+            document.getElementById('sell-pixel-btn').addEventListener('click', () => {
+                alertPlaceholder("Simulación: Poniendo píxel en venta. Esperando Smart Contract.");
+                hideModal('info-modal');
+            });
+        });
+    </script>
 </body>
 </html>
