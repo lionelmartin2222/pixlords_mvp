@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixlords: El Primer Juego de Propiedad de Píxeles en Blockchain</title>
     <style>
-        /* ========================= CSS: VERSION 7.0 (AJUSTES FINALES) ========================= */
+        /* ========================= CSS: VERSION 8.0 (AJUSTES DE ESCALADO Y VISUALIZACIÓN) ========================= */
 
         /* Fuente: Estilo Pixel Art */
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -50,47 +50,41 @@
             margin-bottom: 25px;
         }
 
-        /* Contenedor del mapa y el wrapper de interacción */
-        #map-wrapper {
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-
-        #map-container {
-            width: 1300px;
-            height: 520px;
-            max-width: 100%;
-            overflow: hidden;
-            margin: 20px auto;
-            
-            border: 4px solid #00FFCC;
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.8), 0 0 20px rgba(0, 255, 204, 0.5);
-        }
-
+        /* Contenedor principal que define el espacio visible del mapa */
         #map-interaction-wrapper {
             width: 1300px;
             height: 520px;
-            cursor: grab;
+            max-width: 98vw;
             overflow: hidden;
-            
+            margin: 40px auto 0;
+            cursor: grab;
+            position: relative;
+            border: 8px solid #D4D4D4; 
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); 
         }
 
+        /* --- MAPA REAL: Ahora ocupa todo el espacio del wrapper --- */
         #pixel-map-container {
-            /* El tamaño base del mapa es 500x200 píxeles lógicos */
-            /* Se establece el tamaño aquí para que el zoom inicial funcione */
-            width: 500px; 
-            height: 200px; 
-            transform-origin: 0 0;
+            /* IMPORTANTE: El mapa debe ocupar el 100% del wrapper para verse grande al inicio */
+            width: 100%; 
+            height: 100%; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            image-rendering: pixelated; 
+            transform-origin: 0 0; 
             transition: transform 0.1s ease-out;
+            
+            /* Usamos Grid para que los píxeles se ajusten al contenedor 1300x520px */
             display: grid;
-            grid-template-columns: repeat(500, 1fr);
-            grid-template-rows: repeat(200, 1fr);
-            touch-action: none; /* Prevenir comportamiento por defecto de scroll en touch */
+            grid-template-columns: repeat(500, 1fr); /* 500 columnas de 1 fracción cada una */
+            grid-template-rows: repeat(200, 1fr); /* 200 filas de 1 fracción cada una */
+            touch-action: none; 
             
         }
 
         .pixel {
-            /* El tamaño del pixel se ajusta para llenar el contenedor del mapa */
+            /* El tamaño del pixel se ajusta automáticamente por el Grid (1fr x 1fr) */
             width: 100%; 
             height: 100%;
             display: block;
@@ -228,7 +222,9 @@
         </div>
     </div>
 
-    <!-- SCRIPT DEL JUEGO -->
+    <!-- CRÍTICO: Librería de conexión Web3 (Ethers.js) -->
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script> 
+    
     <script>
         // ====================================================================
         // PIXLORDS - MVP - Lógica principal del juego (Frontend)
@@ -279,11 +275,11 @@
         };
 
         // =========================================================
-        // PARTE I: MAPA GENERATIVO Y LÓGICA DE INICIALIZACIÓN
+        // PARTE I: MAPA GENERATIVO (SOLUCIÓN ESTABLE)
         // =========================================================
         
-        // Esta función genera un mapa irregular con una masa continental central
-        // Sustituye la matriz gigante para garantizar la estabilidad del código.
+        // Esta función genera un mapa irregular con una masa continental central.
+        // Es la solución estable que elimina la matriz de 100,000 caracteres.
         function getInitialMapColor(x, y) {
             const centerX = WIDTH / 2; 
             const centerY = HEIGHT / 2; 
@@ -330,13 +326,13 @@
             return color; 
         }
 
-        // Lógica de Mapeo: '1' -> LAND_COLOR, '0' -> SEA_COLOR
+        // Inicializa el estado del mapa (Hard Reset)
         function initializeMapData() {
-            // Inicialización de datos con la lógica del mapa orgánico
             for (let y = 0; y < HEIGHT; y++) {
                 for (let x = 0; x < WIDTH; x++) {
                     const index = y * WIDTH + x;
                     
+                    // Usa la función generativa para determinar el color inicial
                     const color = getInitialMapColor(x, y);
 
                     // Estado inicial para el Hard Reset de lanzamiento (Todos Libres)
@@ -365,7 +361,7 @@
                 pixelElement.className = 'pixel';
                 pixelElement.style.backgroundColor = pixel.color;
                 
-                // Estos atributos son necesarios para la lógica de selección y modal
+                // Atributos para la lógica de selección y modal
                 pixelElement.dataset.x = pixel.x;
                 pixelElement.dataset.y = pixel.y;
 
