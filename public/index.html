@@ -255,6 +255,7 @@
         // --- VARIABLES TOUCH PARA PINCH-TO-ZOOM ---
         let initialDistance = 0;
         let lastScale = 1.0;
+        let touchStartTimer = null; // CRÍTICO: Temporizador para detectar toque largo
 
 
         // --- PLACEHOLDERS DE BLOCKCHAIN (NECESARIOS PARA MUHAMMAD) ---
@@ -366,7 +367,9 @@
                 pixelElement.dataset.x = pixel.x;
                 pixelElement.dataset.y = pixel.y;
 
+                // El clic izquierdo (tap corto) abre el modal
                 pixelElement.addEventListener('click', handlePixelClick);
+                // El clic derecho (o toque largo) selecciona el pixel
                 pixelElement.addEventListener('contextmenu', handlePixelRightClick); 
 
                 MAP_ELEMENT.appendChild(pixelElement);
@@ -384,7 +387,8 @@
         function handleZoom(event) {
             event.preventDefault();
             const delta = event.deltaY > 0 ? -0.1 : 0.1;
-            const newScale = Math.min(Math.max(1.0, scale + delta), 5.0); 
+            // Aumento del zoom máximo a 10x
+            const newScale = Math.min(Math.max(1.0, scale + delta), 10.0); 
 
             const rect = MAP_ELEMENT.getBoundingClientRect();
             const mouseX = event.clientX - rect.left;
@@ -437,7 +441,7 @@
             WRAPPER.style.cursor = 'grab';
         }
 
-        // --- Lógica Touch (Mobile - Arrastre y Zoom) ---
+        // --- Lógica Touch (Mobile - Arrastre y Zoom y Selección) ---
         function getDistance(touches) {
             if (touches.length < 2) return 0;
             return Math.sqrt(
@@ -447,22 +451,54 @@
         }
 
         function handleTouchStart(event) {
+            // Limpiar cualquier temporizador pendiente
+            if (touchStartTimer) {
+                clearTimeout(touchStartTimer);
+            }
+
             if (event.touches.length === 1) {
-                // Arrastre con un dedo
-                if (scale === 1.0) return;
-                isDragging = true;
-                startDrag = { x: event.touches[0].clientX - position.x, y: event.touches[0].clientY - position.y };
-                event.preventDefault();
+                // Posible toque simple (abre modal) o toque largo (selección)
+                const touch = event.touches[0];
+                currentDrag = { x: touch.clientX, y: touch.clientY }; // Guarda la posición inicial
+                
+                // Establecer un temporizador para simular el click derecho (toque largo)
+                touchStartTimer = setTimeout(() => {
+                    // Si el dedo se mantiene quieto, simular un click derecho/selección
+                    handlePixelRightClick({ preventDefault: () => {}, target: document.elementFromPoint(touch.clientX, touch.clientY) });
+                    isDragging = false; // Bloquear el arrastre después de la selección
+                    touchStartTimer = null;
+                }, 500); // 500ms para toque largo
+
+                // Preparar para arrastre (si no es toque largo)
+                if (scale > 1.0) {
+                    isDragging = true;
+                    startDrag = { x: event.touches[0].clientX - position.x, y: event.touches[0].clientY - position.y };
+                }
+
             } else if (event.touches.length === 2) {
                 // Inicio de Pinch-to-Zoom
                 initialDistance = getDistance(event.touches);
                 lastScale = scale;
                 isDragging = false; // Desactivar arrastre simple
-                event.preventDefault();
             }
+            // Importante: No prevenir por defecto aquí si se quiere el toque largo
         }
 
         function handleTouchMove(event) {
+            // Si hay un movimiento significativo, cancelar el toque largo
+            if (touchStartTimer) {
+                const touch = event.touches[0];
+                const deltaX = Math.abs(touch.clientX - currentDrag.x);
+                const deltaY = Math.abs(touch.clientY - currentDrag.y);
+                
+                // Si el movimiento es mayor a 10 píxeles, se asume arrastre y se cancela el toque largo
+                if (deltaX > 10 || deltaY > 10) {
+                    clearTimeout(touchStartTimer);
+                    touchStartTimer = null;
+                    isDragging = scale > 1.0; // Re-habilitar arrastre si hay zoom
+                }
+            }
+
             if (event.touches.length === 1 && isDragging) {
                 // Arrastre simple (un dedo)
                 const touch = event.touches[0];
@@ -476,48 +512,62 @@
                 position.y = Math.max(Math.min(dy, 0), -maxTranslateY);
                 
                 applyTransform();
+                event.preventDefault(); // Prevenir el scroll por defecto si estamos arrastrando
             } else if (event.touches.length === 2 && initialDistance > 0) {
                 // Pinch-to-Zoom (dos dedos)
                 const newDistance = getDistance(event.touches);
                 const zoomFactor = newDistance / initialDistance;
                 let newScale = lastScale * zoomFactor;
 
-                // Limitar el zoom
-                newScale = Math.min(Math.max(1.0, newScale), 5.0);
+                // Limitar el zoom (Aumentado a 10.0)
+                newScale = Math.min(Math.max(1.0, newScale), 10.0);
 
-                // Calcular el punto central de los dedos
                 const centerClientX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
                 const centerClientY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
 
                 const rect = MAP_ELEMENT.getBoundingClientRect();
-                const mouseX = centerClientX - rect.left;
-                const mouseY = centerClientY - rect.top;
+                const mouseX = centerClientX - position.x; // Usamos position.x/y para calcular el punto en el mapa
+                const mouseY = centerClientY - position.y;
 
                 const ratio = scale / newScale;
 
-                position.x = mouseX - (mouseX - position.x) * ratio;
-                position.y = mouseY - (mouseY - position.y) * ratio;
+                // Recalcular posición
+                position.x = centerClientX - (centerClientX - position.x) * ratio;
+                position.y = centerClientY - (centerClientY - position.y) * ratio;
+
 
                 scale = newScale;
                 
-                // Aplicar límites de traslación
                 const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
                 const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
                 
                 position.x = Math.max(Math.min(position.x, 0), -maxTranslateX);
                 position.y = Math.max(Math.min(position.y, 0), -maxTranslateY);
 
+
                 applyTransform();
+                event.preventDefault();
             }
-            event.preventDefault();
         }
 
         function handleTouchEnd(event) {
-            if (event.touches.length < 2) {
-                isDragging = false;
-                initialDistance = 0;
-                lastScale = scale; 
+            // Si el temporizador de toque largo aún está activo al levantar el dedo, es un TAP corto -> abrir modal
+            if (touchStartTimer) {
+                clearTimeout(touchStartTimer);
+                // Determinar si el toque finalizó en el elemento que queremos
+                if (event.changedTouches.length === 1) {
+                    const touch = event.changedTouches[0];
+                    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                    // Solo si el elemento es un píxel, lo tratamos como un clic
+                    if (element && element.classList.contains('pixel')) {
+                        handlePixelClick({ target: element }); // Simular clic izquierdo para abrir modal
+                    }
+                }
             }
+
+            isDragging = false;
+            initialDistance = 0;
+            lastScale = scale; 
         }
         
         // =========================================================
@@ -537,6 +587,7 @@
         function handlePixelRightClick(event) {
             const targetElement = event.target;
             
+            // Para escritorio, prevenimos el menú contextual
             if (event.preventDefault) {
                 event.preventDefault(); 
             }
