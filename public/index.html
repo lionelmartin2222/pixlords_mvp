@@ -97,7 +97,7 @@
             z-index: 10;
         }
 
-        /* --- ESTILOS DE BOTONES --- */
+        /* --- ESTILOS de BOTONES y Documentos --- */
         .action-btn {
             background-color: #39FF14;
             color: #1a1a1a;
@@ -162,15 +162,6 @@
             color: yellow;
             margin-top: 10px;
         }
-        
-        .instructions-list {
-            list-style: none;
-            padding: 0;
-            text-align: left;
-        }
-        .instructions-list li {
-            margin-bottom: 10px;
-        }
 
     </style>
 </head>
@@ -185,9 +176,10 @@
         </div>
         <!-- NUEVOS BOTONES DE DOCUMENTACIÓN -->
         <div id="doc-controls" style="margin-top: 15px;">
-            <!-- CAMBIO DE LINK: Apunta al nuevo visor HTML -->
+            <!-- REDIRECCIÓN A VISOR DE WHITEPAPER -->
             <a href="whitepaper.html" target="_blank" class="action-btn" id="whitepaper-btn">WHITEPAPER</a>
-            <button id="show-instructions-btn" class="action-btn">INSTRUCCIONES</button>
+            <!-- REDIRECCIÓN A VISOR DE INSTRUCCIONES -->
+            <a href="instructions.html" target="_blank" class="action-btn" id="show-instructions-btn">INSTRUCCIONES</a>
         </div>
     </header>
     
@@ -231,30 +223,6 @@
             
             <button id="close-modal-btn" class="action-btn" onclick="hideModal('info-modal')">Cerrar</button>
             <p id="modal-message" style="color: yellow;"></p>
-        </div>
-    </div>
-
-    <!-- MODAL DE INSTRUCCIONES -->
-    <div id="instructions-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h2>INSTRUCCIONES DE USO</h2>
-            <p style="color: #00FFCC; margin-bottom: 20px;">Cómo interactuar con el mapa Pixlords.</p>
-            <ul class="instructions-list">
-                <li><strong>Conectar Wallet:</strong> Haga clic en "Conectar Billetera (MetaMask)" para vincular su billetera Polygon.</li>
-                <li><strong>Zoom (Escritorio):</strong> Utilice la rueda del mouse para acercar y alejar.</li>
-                <li><strong>Arrastrar (Escritorio/Móvil):</strong> Mantenga presionado el botón izquierdo (o un dedo) sobre el mapa ampliado y arrastre para navegar.</li>
-                <li><strong>Seleccionar Píxeles (Lotes):</strong> 
-                    <ul>
-                        <li>🖱️ **Escritorio:** Haga **clic derecho** sobre el píxel deseado.</li>
-                        <li>📱 **Móvil:** Haga un **toque largo** (mantener presionado por 0.5s) sobre el píxel.</li>
-                    </ul>
-                    El píxel se marcará con un borde magenta.
-                </li>
-                <li><strong>Ver Detalles:</strong> Haga **clic izquierdo** (o **tap corto** en móvil) sobre un píxel para ver su precio, propietario y coordenadas.</li>
-                <li><strong>Comprar Lote:</strong> Una vez seleccionados los píxeles, el resumen de la cesta se actualizará. Haga clic en "Pagar Lote" para iniciar la transacción.</li>
-                <li><strong>Reventa:</strong> Si es propietario, al hacer clic en el píxel, use la sección "Control del Propietario" para establecer un nuevo precio de reventa.</li>
-            </ul>
-            <button id="close-instructions-btn" class="action-btn" onclick="hideModal('instructions-modal')">Cerrar</button>
         </div>
     </div>
 
@@ -807,14 +775,7 @@
             document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
             document.getElementById('close-modal-btn').addEventListener('click', () => hideModal('info-modal'));
             
-            // 5. Mostrar instrucciones al hacer clic en el botón
-            document.getElementById('show-instructions-btn').addEventListener('click', () => {
-                hideModal('info-modal'); // Cerrar modal de info si estaba abierto
-                const modal = document.getElementById('instructions-modal');
-                modal.style.display = 'flex';
-            });
-
-            // 6. Placeholders de controles de propietario
+            // 5. Placeholders de controles de propietario
             document.getElementById('sell-pixel-btn').addEventListener('click', () => {
                 alertPlaceholder("Simulación: Poniendo píxel en venta. Esperando Smart Contract.");
                 hideModal('info-modal');
