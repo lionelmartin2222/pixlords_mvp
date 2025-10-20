@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixlords: El Primer Juego de Propiedad de Píxeles en Blockchain</title>
     <style>
-        /* ========================= CSS: VERSION 8.0 (AJUSTES DE ESCALADO Y VISUALIZACIÓN) ========================= */
+        /* ========================= CSS: VERSION 8.1 (AJUSTES DE ESCALADO Y VISUALIZACIÓN) ========================= */
 
         /* Fuente: Estilo Pixel Art */
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -251,12 +251,17 @@
         let isDragging = false;
         let startDrag = { x: 0, y: 0 };
         let currentDrag = { x: 0, y: 0 };
+        
+        // --- VARIABLES TOUCH PARA PINCH-TO-ZOOM ---
+        let initialDistance = 0;
+        let lastScale = 1.0;
 
 
         // --- PLACEHOLDERS DE BLOCKCHAIN (NECESARIOS PARA MUHAMMAD) ---
         const CONTRACT_ADDRESS = "DIRECCION_DE_CONTRATO_AQUI"; 
         const PIXEL_CONTRACT_ABI = []; 
-        const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a922Aa845041"; 
+        // USDC Nativo (Confirmado: 0x3c499c542ceF5E3811e1192ce70d8cc03d5C3359)
+        const USDC_ADDRESS = "0x3c499c542ceF5E3811e1192ce70d8cc03d5C3359"; 
 
         // --- COLORES ---
         const LAND_COLOR = '#008000'; // Verde
@@ -279,7 +284,6 @@
         // =========================================================
         
         // Esta función genera un mapa irregular con una masa continental central.
-        // Es la solución estable que elimina la matriz de 100,000 caracteres.
         function getInitialMapColor(x, y) {
             const centerX = WIDTH / 2; 
             const centerY = HEIGHT / 2; 
@@ -295,13 +299,12 @@
             );
 
             // Ruido: Añade irregularidad a los bordes (como costas)
-            // Se usa el seno y el coseno para generar ondulaciones naturales
             const noise = Math.sin(x * 0.05) * 10 + Math.cos(y * 0.08) * 10;
             
             // El radio base del continente, ajustado por el ruido
             const baseRadius = 400;
 
-            // Simulación de un lago interior (un área de agua dentro de la tierra)
+            // Simulación de un lago interior 
             const isLake = (x > 180 && x < 320 && y > 80 && y < 120);
             const lakeDist = Math.sqrt(Math.pow(x - 250, 2) + Math.pow(y - 100, 2));
 
@@ -316,7 +319,7 @@
                 }
             }
             
-            // Simulación de pequeñas islas aleatorias (para romper la uniformidad del mar)
+            // Simulación de pequeñas islas aleatorias
             if (Math.random() < 0.001) { 
                 if (color === SEA_COLOR) {
                     color = LAND_COLOR;
@@ -332,7 +335,6 @@
                 for (let x = 0; x < WIDTH; x++) {
                     const index = y * WIDTH + x;
                     
-                    // Usa la función generativa para determinar el color inicial
                     const color = getInitialMapColor(x, y);
 
                     // Estado inicial para el Hard Reset de lanzamiento (Todos Libres)
@@ -361,7 +363,6 @@
                 pixelElement.className = 'pixel';
                 pixelElement.style.backgroundColor = pixel.color;
                 
-                // Atributos para la lógica de selección y modal
                 pixelElement.dataset.x = pixel.x;
                 pixelElement.dataset.y = pixel.y;
 
@@ -373,26 +374,22 @@
         }
 
         // =========================================================
-        // PARTE II: LÓGICA DE INTERACCIÓN (ZOOM Y ARRASTRE)
+        // PARTE II: LÓGICA DE INTERACCIÓN (ZOOM Y ARRASTRE - Desktop & Mobile)
         // =========================================================
 
         function applyTransform() {
-            // Asegura que el mapa se vea en su posición y escala correctas
             MAP_ELEMENT.style.transform = `translate(${position.x}px, ${position.y}px) scale(${scale})`;
         }
 
         function handleZoom(event) {
             event.preventDefault();
-            // Determina la dirección del zoom y calcula la nueva escala
             const delta = event.deltaY > 0 ? -0.1 : 0.1;
             const newScale = Math.min(Math.max(1.0, scale + delta), 5.0); 
 
-            // Calcula el punto focal del zoom
             const rect = MAP_ELEMENT.getBoundingClientRect();
             const mouseX = event.clientX - rect.left;
             const mouseY = event.clientY - rect.top;
 
-            // Ajusta la posición para mantener el punto bajo el cursor (fórmula de zoom)
             const oldScale = scale;
             scale = newScale;
 
@@ -401,7 +398,6 @@
             position.x = mouseX - (mouseX - position.x) * ratio;
             position.y = mouseY - (mouseY - position.y) * ratio;
 
-            // Restricción de límites (para que el mapa no se salga completamente de vista)
             const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
             const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
 
@@ -412,8 +408,9 @@
             applyTransform();
         }
 
+        // --- Lógica de Arrastre (Desktop) ---
         function handleMouseDown(event) {
-            if (event.button !== 0 || scale === 1.0) return; // Solo botón izquierdo y solo si hay zoom
+            if (event.button !== 0 || scale === 1.0) return;
             isDragging = true;
             WRAPPER.style.cursor = 'grabbing';
             startDrag = { x: event.clientX - position.x, y: event.clientY - position.y };
@@ -426,11 +423,9 @@
             const dx = event.clientX - startDrag.x;
             const dy = event.clientY - startDrag.y;
             
-            // Calcula los límites de arrastre
             const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
             const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
 
-            // Aplica límites al nuevo desplazamiento
             position.x = Math.max(Math.min(dx, 0), -maxTranslateX);
             position.y = Math.max(Math.min(dy, 0), -maxTranslateY);
 
@@ -442,42 +437,89 @@
             WRAPPER.style.cursor = 'grab';
         }
 
-        // --- Lógica Touch (Para compatibilidad móvil) ---
-        let lastTouch = null;
+        // --- Lógica Touch (Mobile - Arrastre y Zoom) ---
+        function getDistance(touches) {
+            if (touches.length < 2) return 0;
+            return Math.sqrt(
+                Math.pow(touches[0].clientX - touches[1].clientX, 2) +
+                Math.pow(touches[0].clientY - touches[1].clientY, 2)
+            );
+        }
 
         function handleTouchStart(event) {
-            if (scale === 1.0) return;
-            const touch = event.touches[0];
-            isDragging = true;
-            lastTouch = { x: touch.clientX, y: touch.clientY };
+            if (event.touches.length === 1) {
+                // Arrastre con un dedo
+                if (scale === 1.0) return;
+                isDragging = true;
+                startDrag = { x: event.touches[0].clientX - position.x, y: event.touches[0].clientY - position.y };
+                event.preventDefault();
+            } else if (event.touches.length === 2) {
+                // Inicio de Pinch-to-Zoom
+                initialDistance = getDistance(event.touches);
+                lastScale = scale;
+                isDragging = false; // Desactivar arrastre simple
+                event.preventDefault();
+            }
         }
 
         function handleTouchMove(event) {
-            if (!isDragging || event.touches.length > 1) return; // Ignorar zoom de pellizco
-            const touch = event.touches[0];
-            const dx = touch.clientX - lastTouch.x;
-            const dy = touch.clientY - lastTouch.y;
+            if (event.touches.length === 1 && isDragging) {
+                // Arrastre simple (un dedo)
+                const touch = event.touches[0];
+                const dx = touch.clientX - startDrag.x;
+                const dy = touch.clientY - startDrag.y;
+                
+                const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
+                const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
 
-            position.x += dx;
-            position.y += dy;
-            lastTouch = { x: touch.clientX, y: touch.clientY };
+                position.x = Math.max(Math.min(dx, 0), -maxTranslateX);
+                position.y = Math.max(Math.min(dy, 0), -maxTranslateY);
+                
+                applyTransform();
+            } else if (event.touches.length === 2 && initialDistance > 0) {
+                // Pinch-to-Zoom (dos dedos)
+                const newDistance = getDistance(event.touches);
+                const zoomFactor = newDistance / initialDistance;
+                let newScale = lastScale * zoomFactor;
 
-            // Aplicar restricciones de límites (la misma lógica de MouseMove)
-            const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
-            const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
+                // Limitar el zoom
+                newScale = Math.min(Math.max(1.0, newScale), 5.0);
 
-            position.x = Math.max(Math.min(position.x, 0), -maxTranslateX);
-            position.y = Math.max(Math.min(position.y, 0), -maxTranslateY);
+                // Calcular el punto central de los dedos
+                const centerClientX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+                const centerClientY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
 
-            applyTransform();
+                const rect = MAP_ELEMENT.getBoundingClientRect();
+                const mouseX = centerClientX - rect.left;
+                const mouseY = centerClientY - rect.top;
+
+                const ratio = scale / newScale;
+
+                position.x = mouseX - (mouseX - position.x) * ratio;
+                position.y = mouseY - (mouseY - position.y) * ratio;
+
+                scale = newScale;
+                
+                // Aplicar límites de traslación
+                const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
+                const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
+                
+                position.x = Math.max(Math.min(position.x, 0), -maxTranslateX);
+                position.y = Math.max(Math.min(position.y, 0), -maxTranslateY);
+
+                applyTransform();
+            }
             event.preventDefault();
         }
 
-        function handleTouchEnd() {
-            isDragging = false;
-            lastTouch = null;
+        function handleTouchEnd(event) {
+            if (event.touches.length < 2) {
+                isDragging = false;
+                initialDistance = 0;
+                lastScale = scale; 
+            }
         }
-
+        
         // =========================================================
         // PARTE III: LÓGICA DE NEGOCIO (SELECCIÓN Y MODAL)
         // =========================================================
@@ -501,10 +543,9 @@
             
             const x = parseInt(targetElement.dataset.x);
             const y = parseInt(targetElement.dataset.y);
-            const id = `${x}-${y}`; // Usamos guion para el Set, ver clearCart
+            const id = `${x}-${y}`; 
             const pixel = mapData[y * WIDTH + x];
 
-            // Solo puedes seleccionar píxeles que NO estén ya comprados
             if (!pixel.isOwned) {
                 if (selectedPixels.has(id)) {
                     selectedPixels.delete(id);
@@ -515,7 +556,6 @@
                 }
                 updateCartSummary();
             } else {
-                // Mensaje simple si intenta seleccionar un píxel ya comprado
                 const modal = document.getElementById('info-modal');
                 const message = modal.querySelector('#modal-message');
                 message.textContent = "Este píxel ya está comprado. Haz clic izquierdo para ver detalles.";
@@ -552,7 +592,6 @@
             document.getElementById('modal-price').textContent = `${pixel.price.toFixed(2)} USDC`;
             document.getElementById('modal-owner').textContent = pixel.owner;
             
-            // Asigna el color real del píxel a un elemento visible en el modal
             const colorDisplay = document.getElementById('modal-color-display');
             colorDisplay.style.width = '20px'; 
             colorDisplay.style.height = '20px';
@@ -561,8 +600,6 @@
             colorDisplay.style.backgroundColor = pixel.color;
             colorDisplay.style.border = '1px solid #FDFD96';
 
-            // Lógica de visualización de controles
-            // Nota: currentAccount es nulo si no está conectado, simulando "no dueño"
             const isUserOwner = (currentAccount && pixel.owner === currentAccount); 
 
             document.getElementById('owner-controls').style.display = isUserOwner ? 'block' : 'none'; 
@@ -577,7 +614,6 @@
             } else {
                 buyBtn.textContent = `COMPRAR (Reventa) por ${pixel.price.toFixed(2)} USDC`;
                 buyBtn.onclick = () => {
-                    // Llamada al placeholder de compra individual
                     alertPlaceholder('Compra Individual/Reventa iniciada. Esperando conexión blockchain.');
                     hideModal('info-modal');
                 };
@@ -591,35 +627,26 @@
             document.getElementById('modal-message').textContent = "";
         }
         
-        // Función placeholder para evitar el alert() nativo
         function alertPlaceholder(message) {
             console.log("ALERTA PLACEHOLDER: " + message);
-            // Implementación de un modal de mensaje simple (opcional)
         }
 
         // =========================================================
         // PARTE IV: CONEXIÓN REAL A BLOCKCHAIN (PLACEHOLDERS) Y SETUP
         // =========================================================
 
-        // ** ESTAS FUNCIONES SERÁN REEMPLAZADAS POR EL CÓDIGO DE MUHAMMAD **
         async function connectWallet() {
             const statusMessage = document.getElementById('status-message');
             const connectBtn = document.getElementById('connect-wallet');
             
             if (window.ethereum) {
                 try {
-                    // Simulación de solicitud de conexión real
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     currentAccount = accounts[0];
                     statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
                     connectBtn.textContent = 'Desconectar';
                     statusMessage.style.color = '#39FF14'; 
                     connectBtn.onclick = disconnectWallet;
-                    
-                    // Inicializar Ethers provider y contract (PLACEHOLDER)
-                    // provider = new ethers.providers.Web3Provider(window.ethereum);
-                    // signer = provider.getSigner();
-                    // pixelContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, signer);
                     
                     alertPlaceholder("Conexión de billetera exitosa.");
 
@@ -647,19 +674,7 @@
 
         function executeBatchPurchase() {
             if (selectedPixels.size > 0) {
-                // Aquí iría la lógica REAL de Muhammad:
-                // 1. Aprobar USDC (si es la primera vez)
-                // 2. Llamar a pixelContract.buyMultiplePixels(pixelCoords, totalCost)
-                
                 alertPlaceholder(`Compra por LOTE de ${selectedPixels.size} píxeles iniciada. Esperando transacción blockchain.`);
-                
-                // Simulación de éxito después de la transacción
-                // for (const id of selectedPixels) {
-                //     const [x, y] = id.split('-').map(Number);
-                //     mapData[y * WIDTH + x].isOwned = true;
-                //     mapData[y * WIDTH + x].owner = currentAccount;
-                // }
-                // renderMap(); // Re-renderizar para mostrar los nuevos dueños
                 clearCart();
             }
         }
@@ -676,23 +691,24 @@
             initializeMapData();
             renderMap();
             
-            // 2. Configuración de eventos de Zoom y Arrastre
+            // 2. Configuración de eventos de Zoom y Arrastre (Desktop)
             WRAPPER.addEventListener('wheel', handleZoom);
             WRAPPER.addEventListener('mousedown', handleMouseDown);
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
 
+            // 3. Configuración de eventos Touch (Mobile)
             WRAPPER.addEventListener('touchstart', handleTouchStart);
             WRAPPER.addEventListener('touchmove', handleTouchMove);
             WRAPPER.addEventListener('touchend', handleTouchEnd);
             
-            // 3. Configuración de eventos de Negocio y Billetera
+            // 4. Configuración de eventos de Negocio y Billetera
             document.getElementById('connect-wallet').addEventListener('click', connectWallet);
             document.getElementById('pay-batch-btn').addEventListener('click', executeBatchPurchase);
             document.getElementById('clear-cart-btn').addEventListener('click', clearCart);
             document.getElementById('close-modal-btn').addEventListener('click', () => hideModal('info-modal'));
             
-            // 4. Placeholders de controles de propietario (PARA MUHAMMAD)
+            // 5. Placeholders de controles de propietario
             document.getElementById('set-color-btn').addEventListener('click', () => {
                 alertPlaceholder("Simulación: Cambiando color. Esperando Smart Contract.");
                 hideModal('info-modal');
