@@ -17,17 +17,17 @@ Libertad Total de Mercado: El propietario de un píxel tiene la soberanía absol
 
 Declaración Visual Única: El propietario establece el color de su píxel de forma gratuita al momento de la compra, inscribiendo su marca personal en el mapa de forma permanente. Este color no podrá modificarse posteriormente, asegurando la identidad visual del propietario fundador.
 
-Metadatos de Prestigio (NFT Legacy): El sistema registra de forma permanente ciertos atributos históricos (ej., "Primer Comprador", "Coordenada Cero") en los metadatos del token (NFT) o mediante lógica de Frontend de Pixlords. Esto establece un valor coleccionable inmediato sin requerir modificaciones a la estructura base del Smart Contract.
+Metadatos de Prestigio (NFT Legacy): La plataforma Pixlords detecta y certifica permanentemente atributos históricos únicos de cada píxel (ej., "Píxel Fundador", "Coordenada Cero", "Píxel Cardinal", etc) en el momento de su compra inicial. Esta certificación se integra en el valor coleccionable del NFT y es reconocida por el ecosistema otorgando característica de rareza, incrementando la escasez y el valor potencial del píxel.
 
 ## **Fase 2: Consolidación y Prestigio Territorial**
 
 La Fase 2 se centra en convertir la propiedad individual en valor geográfico a través de la cohesión social y territorial:
 
-Emblemas de Poder (Territory Recognition): Al consolidar bloques contiguos de píxeles (ej. un área de 10x10), los propietarios desbloquearán la capacidad de establecer un Emblema de Región y un nombre oficial. Este reconocimiento visual en el mapa de Pixlords confiere prestigio y actúa como un factor directo en la revalorización de todos los píxeles dentro de dicho territorio. Esta funcionalidad será gestionada por el Frontend de Pixlords sin requerir una transacción adicional en la blockchain.
+Emblemas de Poder (Territory Recognition): Al consolidar bloques contiguos de píxeles (ej. un área de 10x10), los propietarios desbloquearán la capacidad de establecer un Emblema de Región y un nombre oficial. Este reconocimiento visual en el mapa de Pixlords confiere prestigio y actúa como un factor directo en la revalorización de todos los píxeles dentro de dicho territorio. 
 
 Posicionamiento Estratégico (Billboard Spots): La tierra (píxeles verdes) se activa como un medio de comunicación. Los propietarios podrán anclar mensajes cortos visibles al hacer zoom en el mapa. Los píxeles ubicados en zonas de alto tráfico o de alta visibilidad se transformarán en valiosas vallas publicitarias digitales.
 
-## **Fase 3: Exhibición y Expansión del Ecosistema**
+## **Fase 3: Expansión y Equilibrio del Ecosistema**
 
 La fase final apalanca la demanda externa conectando Pixlords al amplio ecosistema de NFTs de Polygon:
 
@@ -39,4 +39,5 @@ Eventos de Valoración (Alquiler de Espacio Visual): Se introducirán eventos te
 
 El token de transacción es USDC Nativo en la red Polygon (0x3c499c542ceF5E3811e1192ce70d8cc03d5C3359), asegurando estabilidad y bajas comisiones.
 
-Financiamiento: El 100% de los ingresos iniciales generados por la venta primaria de los 100,000 píxeles se destina al Tesoro de Desarrollo y Operación de Pixlords, asegurando la financiación de las Fases 2 y 3 del proyecto, la infraestructura y el mantenimiento continuo. La revalorización y ganancia del usuario es impulsada enteramente por la escasez absoluta (solo 100,000 píxeles), la demanda del mercado y la utilidad progresiva de las Fases futuras, que hacen intrínsecamente más atractivo y valioso el NFT.
+Financiamiento: El 100% de los ingresos iniciales generados por la venta primaria de los 100.000 píxeles se destina al Tesoro de Desarrollo y Operación de Pixlords. Estos fondos aseguran el recupero de la inversión inicial del equipo de desarrollo, la infraestructura y el mantenimiento continuo, y aseguran la financiación de las Fases 2 y 3 del proyecto.
+La revalorización del NFT es impulsada enteramente por la escasez absoluta (solo 100.000 píxeles), la demanda del mercado y la utilidad progresiva de las Fases futuras. Estos factores hacen el NFT más atractivo y valioso. La potencial ganancia del propietario consiste exclusivamente en el valor de reventa del NFT.
