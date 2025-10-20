@@ -185,7 +185,8 @@
         </div>
         <!-- NUEVOS BOTONES DE DOCUMENTACIÓN -->
         <div id="doc-controls" style="margin-top: 15px;">
-            <a href="whitepaper.md" target="_blank" class="action-btn" id="whitepaper-btn">WHITEPAPER</a>
+            <!-- CAMBIO DE LINK: Apunta al nuevo visor HTML -->
+            <a href="whitepaper.html" target="_blank" class="action-btn" id="whitepaper-btn">WHITEPAPER</a>
             <button id="show-instructions-btn" class="action-btn">INSTRUCCIONES</button>
         </div>
     </header>
@@ -808,7 +809,9 @@
             
             // 5. Mostrar instrucciones al hacer clic en el botón
             document.getElementById('show-instructions-btn').addEventListener('click', () => {
-                showModal('instructions-modal');
+                hideModal('info-modal'); // Cerrar modal de info si estaba abierto
+                const modal = document.getElementById('instructions-modal');
+                modal.style.display = 'flex';
             });
 
             // 6. Placeholders de controles de propietario
