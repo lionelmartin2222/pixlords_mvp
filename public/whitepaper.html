@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whitepaper Pixlords</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluimos la fuente Press Start 2P para mantener la coherencia -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #1a1a1a; 
+            color: #FDFD96;
+        }
+        .markdown-body {
+            /* Estilos para el contenido Markdown */
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            line-height: 1.8;
+            font-size: 10px;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            color: #39FF14;
+            text-shadow: 0 0 5px #00FF00;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #555;
+            padding-bottom: 5px;
+        }
+        .markdown-body h1 { font-size: 18px; }
+        .markdown-body h2 { font-size: 14px; }
+        .markdown-body h3 { font-size: 12px; }
+        .markdown-body p, .markdown-body li {
+            margin-bottom: 10px;
+        }
+        .markdown-body ul {
+            list-style: square;
+            margin-left: 20px;
+        }
+        .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .markdown-body th, .markdown-body td {
+            border: 1px solid #D4D4D4;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<div class="markdown-body" id="markdown-content">
+    <h1 class="text-center">Cargando Whitepaper...</h1>
+</div>
+
+<script>
+    // Función simple para convertir Markdown a HTML
+    // NOTA: Para producción real, se recomienda una librería como 'marked.js'
+    function markdownToHtml(markdown) {
+        let html = markdown
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^\* (.*$)/gim, '<li>$1</li>')
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+        
+        // Wrap list items in <ul>. This is a very simple approach.
+        html = html.replace(/(<li>.*<\/li>(\s*))+/gim, '<ul>$&</ul>');
+
+        // Simple paragraph wrapping for remaining text lines
+        const lines = html.split('\n').filter(line => line.trim() !== '');
+        let output = '';
+        lines.forEach(line => {
+            if (!line.startsWith('<h') && !line.startsWith('<ul')) {
+                output += `<p>${line}</p>\n`;
+            } else {
+                output += line + '\n';
+            }
+        });
+
+        return output;
+    }
+
+    async function loadMarkdown() {
+        try {
+            // El archivo whitepaper.md debe existir en la misma carpeta
+            const response = await fetch('whitepaper.md');
+            if (!response.ok) {
+                document.getElementById('markdown-content').innerHTML = `
+                    <h1 class="text-red-500">Error 404: Archivo 'whitepaper.md' no encontrado.</h1>
+                    <p class="text-red-300">Por favor, cree el archivo whitepaper.md en la carpeta /public con el contenido del Whitepaper final.</p>
+                `;
+                return;
+            }
+            
+            const markdownText = await response.text();
+            
+            // Usamos una librería o función simple para convertir Markdown a HTML estilizado
+            const htmlContent = markdownToHtml(markdownText);
+            
+            document.getElementById('markdown-content').innerHTML = htmlContent;
+
+        } catch (error) {
+            console.error("Error cargando el whitepaper:", error);
+            document.getElementById('markdown-content').innerHTML = '<h1 class="text-red-500">Error al cargar el documento.</h1>';
+        }
+    }
+
+    // Ejecutar la carga al inicio
+    window.onload = loadMarkdown;
+
+    // Aseguramos que el color del body sea negro para el visor
+    document.body.style.backgroundColor = '#1a1a1a';
+</script>
+
+</body>
+</html>
