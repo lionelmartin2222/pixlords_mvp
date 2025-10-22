@@ -273,9 +273,8 @@
         // 1. Dirección del Contrato Desplegado en PolygonScan
         const CONTRACT_ADDRESS = "0xeC1478F4ECa7698D1A0fB6BDd44387177aB2726d"; 
 
-        // 2. ABI del Contrato (Código JSON, pegado aquí)
-        // Este ABI se tomó del PixelABI.txt proporcionado por Muhammad.
-        const PIXEL_CONTRACT_ABI = [{"inputs":[{"internalType":"contract IERC20","name":"_paymentToken","type":"address"},{"internalType":"address","name":"_developerWallet","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"inputs":[],"name":"ReentrancyGuardReentrantCall","type":"error"},{"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"SafeERC20FailedOperation","type":"error"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"string","name":"newColor","type":"string"}],"name":"PixelColorChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newPrice","type":"uint256"}],"name":"PixelPriceSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"buyer","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"price","type":"uint256"}],"name":"PixelPurchased","type":"event"},{"inputs":[],"name":"COMMISSION_PERCENT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"INITIAL_PRICE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAP_HEIGHT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAP_WIDTH","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256[]","name":"xCoords","type":"uint256[]"},{"internalType":"uint256[]","name":"yCoords","type":"uint256[]"},{"internalType":"string[]","name":"colors","type":"string[]"}],"name":"buyMultiplePixels","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"},{"internalType":"string","name":"newColor","type":"string"}],"name":"buyPixel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"developerWallet","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"}],"name":"getPixel","outputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"string","name":"color","type":"string"},{"internalType":"uint256","name":"price","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"}],"name":"isPixelOwned","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"map","outputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"string","name":"color","type":"string"},{"internalType":"uint256","name":"price","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"paymentToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newDeveloperWallet","type":"address"}],"name":"setDeveloperWallet","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"},{"internalType":"uint256","name":"newPrice","type":"uint256"}],"name":"setSalePrice","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdrawToken","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+        // 2. ABI del Contrato (Código JSON, pegado aquí) - CORREGIDO
+        const PIXEL_CONTRACT_ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"inputs":[],"name":"ReentrancyGuardReentrantCall","type":"error"},{"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"SafeERC20FailedOperation","type":"error"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"string","name":"newColor","type":"string"}],"name":"PixelColorChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newPrice","type":"uint256"}],"name":"PixelPriceSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"buyer","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"price","type":"uint256"}],"name":"PixelPurchased","type":"event"},{"inputs":[],"name":"COMMISSION_PERCENT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"INITIAL_PRICE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAP_HEIGHT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAP_WIDTH","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256[]","name":"xCoords","type":"uint256[]"},{"internalType":"uint256[]","name":"yCoords","type":"uint256[]"},{"internalType":"string[]","name":"colors","type":"string[]"}],"name":"buyMultiplePixels","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"},{"internalType":"string","name":"newColor","type":"string"}],"name":"buyPixel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"developerWallet","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"}],"name":"getPixel","outputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"string","name":"color","type":"string"},{"internalType":"uint256","name":"price","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"}],"name":"isPixelOwned","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"map","outputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"string","name":"color","type":"string"},{"internalType":"uint256","name":"price","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"paymentToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newDeveloperWallet","type":"address"}],"name":"setDeveloperWallet","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"},{"internalType":"uint256","name":"newPrice","type":"uint256"}],"name":"setSalePrice","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdrawToken","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
         // 3. Dirección del Token de Pago (USDC Nativo, confirmado)
         const USDC_ADDRESS = "0x3c499c542ceF5E3811e1192ce70d8cc03d5C3359"; 
@@ -284,6 +283,7 @@
         const DEVELOPER_WALLET = "0x22FE5926F3bD845d947Be1A9F9693B6Aab45De81"; 
         
         // --- ABI del Token USDC (Para la aprobación de fondos) ---
+        // Se usa un ABI minimalista para las funciones de ERC20 que necesitamos (approve y allowance)
         const USDC_ABI = [
             "function approve(address spender, uint256 amount) returns (bool)",
             "function allowance(address owner, address spender) view returns (uint256)"
@@ -604,6 +604,9 @@
             const index = y * WIDTH + x;
             const pixel = mapData[index];
 
+            // Guardar el píxel actual en el estado global para la reventa
+            currentPixel = pixel;
+
             showModal(pixel, pixelElement);
         }
 
@@ -617,7 +620,8 @@
             const x = parseInt(targetElement.dataset.x);
             const y = parseInt(targetElement.dataset.y);
             const id = `${x}-${y}`; 
-            const pixel = mapData[y * WIDTH + x];
+            const index = y * WIDTH + x;
+            const pixel = mapData[index];
 
             if (!pixel.isOwned) {
                 if (selectedPixels.has(id)) {
@@ -673,9 +677,10 @@
             colorDisplay.style.backgroundColor = pixel.color;
             colorDisplay.style.border = '1px solid #FDFD96';
 
-            const isUserOwner = (currentAccount && pixel.owner === currentAccount); 
+            const isUserOwner = (currentAccount && pixel.owner && pixel.owner.toLowerCase() === currentAccount.toLowerCase()); 
 
-            document.getElementById('owner-controls').style.display = isUserOwner ? 'block' : 'none'; 
+            // CORRECCIÓN 2: Mostrar controles de propietario solo si está conectado Y es el dueño
+            document.getElementById('owner-controls').style.display = isUserOwner && pixel.isOwned ? 'block' : 'none'; 
             const buyBtn = document.getElementById('buy-pixel-btn');
 
             if (!pixel.isOwned) {
@@ -686,8 +691,9 @@
                 };
             } else {
                 buyBtn.textContent = `COMPRAR (Reventa) por ${pixel.price.toFixed(2)} USDC`;
+                // La compra individual aún requiere más lógica, por ahora solo muestra el placeholder
                 buyBtn.onclick = () => {
-                    alertPlaceholder('Compra Individual/Reventa iniciada. Esperando conexión blockchain.');
+                    alertPlaceholder('Compra Individual/Reventa iniciada. Función buyPixel pendiente de implementación completa.');
                     hideModal('info-modal');
                 };
             }
@@ -704,11 +710,59 @@
             console.log("ALERTA PLACEHOLDER: " + message);
         }
 
+        // --- FUNCIÓN DE UTILIDAD PARA CONVERTIR USDC ---
+        function toContractDecimals(amount) {
+            // Maneja la conversión a 10^6 (USDC decimals)
+            return ethers.utils.parseUnits(amount.toString(), USDC_DECIMALS);
+        }
+        
+        function fromContractDecimals(amount) {
+            // Maneja la conversión de 10^6 a número flotante
+            return parseFloat(ethers.utils.formatUnits(amount, USDC_DECIMALS));
+        }
+
+        // --- FUNCIÓN DE CARGA DE DATOS DEL MAPA (LEER BLOCKCHAIN) ---
+        async function loadMapDataFromContract() {
+            if (!provider) return;
+
+            // Usamos un contrato sin signer, solo para lectura
+            const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, provider);
+
+            for (let y = 0; y < HEIGHT; y++) {
+                for (let x = 0; x < WIDTH; x++) {
+                    const index = y * WIDTH + x;
+                    
+                    try {
+                        // Llamada a la función view del contrato: getPixel(x, y)
+                        // Devuelve: address owner, string memory color, uint256 price
+                        const [owner, color, priceInWei] = await readOnlyContract.getPixel(x, y);
+                        
+                        mapData[index] = {
+                            x,
+                            y,
+                            // Si el color es una cadena vacía (primera compra), usa el color generativo
+                            color: color === "" ? getInitialMapColor(x, y) : color, 
+                            owner: owner === '0x0000000000000000000000000000000000000000' ? 'Libre' : owner,
+                            price: fromContractDecimals(priceInWei),
+                            isOwned: owner !== '0x0000000000000000000000000000000000000000'
+                        };
+
+                    } catch (e) {
+                        // Si hay un error, mantener el valor inicial
+                        console.error(`Error al cargar pixel (${x}, ${y}):`, e);
+                    }
+                }
+            }
+        }
+        
         // =========================================================
         // PARTE IV: CONEXIÓN REAL A BLOCKCHAIN (INTEGRACIÓN)
         // =========================================================
 
         async function connectWallet() {
+             const statusMessage = document.getElementById('status-message');
+             const connectBtn = document.getElementById('connect-wallet');
+             
              if (typeof window.ethereum !== 'undefined' && typeof window.ethereum.request !== 'undefined') {
                 try {
                     // Pedir acceso a la cuenta de Metamask
@@ -716,24 +770,29 @@
                     currentAccount = accounts[0];
                     
                     // Inicializar el proveedor y el firmante de Ethers
-                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
                     const signer = provider.getSigner();
 
                     // Inicializar los contratos
                     pixelContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, signer);
                     paymentTokenContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
                     
-                    document.getElementById('status-message').textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
-                    document.getElementById('connect-wallet').textContent = 'Desconectar';
-                    document.getElementById('status-message').style.color = '#39FF14'; 
+                    // Actualizar el estado del botón y mensaje
+                    statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
+                    connectBtn.textContent = 'Desconectar';
+                    connectBtn.onclick = disconnectWallet; // Asignar la función de desconexión
+                    statusMessage.style.color = '#39FF14'; 
                     
-                    // Iniciar la lógica de carga de mapa real (TODO: Implementar loadMapDataFromContract)
-                    // loadMapDataFromContract(); 
+                    // Cargar el estado real del mapa después de la conexión
+                    await loadMapDataFromContract(); 
+                    renderMap(); 
                     
                     alertPlaceholder("Conexión a billetera exitosa.");
 
                 } catch (error) {
                     console.error("Error al conectar la billetera:", error);
+                    statusMessage.textContent = 'Error de Conexión';
+                    statusMessage.style.color = 'red';
                     alertPlaceholder('Error de Conexión. Asegúrese de estar en Polygon Mainnet.');
                 }
             } else {
@@ -742,21 +801,20 @@
         }
 
         function disconnectWallet() {
-            // ... (Lógica de desconexión) ...
             currentAccount = null;
-            document.getElementById('status-message').textContent = 'DESCONECTADO';
-            document.getElementById('connect-wallet').textContent = 'Conectar Billetera (MetaMask)';
-            document.getElementById('status-message').style.color = '#FDFD96'; 
-            // Podríamos forzar un render del mapa para reflejar el estado desconectado
+            const statusMessage = document.getElementById('status-message');
+            const connectBtn = document.getElementById('connect-wallet');
+            
+            statusMessage.textContent = 'DESCONECTADO';
+            connectBtn.textContent = 'Conectar Billetera (MetaMask)';
+            statusMessage.style.color = '#FDFD96'; 
+            connectBtn.onclick = connectWallet;
+            alertPlaceholder("Billetera desconectada.");
+            // Opcional: recargar la página para restablecer el estado.
+            // location.reload();
         }
         
-        // --- FUNCIÓN DE UTILIDAD PARA CONVERTIR USDC ---
-        function toContractDecimals(amount) {
-            // USDC tiene 6 decimales, ethers.utils.parseUnits maneja esto
-            return ethers.utils.parseUnits(amount.toString(), USDC_DECIMALS);
-        }
-
-        // --- FUNCIÓN DE COMPRA POR LOTE ---
+        // --- FUNCIÓN DE COMPRA POR LOTE (INTEGRADA) ---
         async function executeBatchPurchase() {
             if (!currentAccount) {
                 alertPlaceholder("Por favor, conecte su billetera para comprar píxeles.");
@@ -771,14 +829,13 @@
             const yCoords = [];
             const colors = [];
             
-            // Recopilar datos y establecer un color fijo para la compra
+            // Recopilar datos
             for (const id of selectedPixels) {
                 const [x, y] = id.split('-').map(Number);
                 xCoords.push(x);
                 yCoords.push(y);
                 
-                // *** COLOR FIJO PARA EL HARD RESET ***
-                // Se utiliza el color del mapa (LAND_COLOR o SEA_COLOR) como color inicial del NFT
+                // Usamos el color actual del mapa (LAND_COLOR o SEA_COLOR) como color inicial del NFT
                 const pixel = mapData[y * WIDTH + x];
                 colors.push(pixel.color); 
             }
@@ -789,54 +846,71 @@
                 
                 if (allowance.lt(totalCostInWei)) {
                     alertPlaceholder(`Aprobando ${totalCost} USDC para el contrato...`);
+                    // Se aprueba MaxUint256 para evitar aprobaciones futuras
                     const txApprove = await paymentTokenContract.approve(CONTRACT_ADDRESS, ethers.constants.MaxUint256);
                     await txApprove.wait();
                     alertPlaceholder("Aprobación exitosa. Continuando con la compra...");
                 }
 
                 // 2. COMPRA (LLAMADA FINAL AL CONTRATO)
-                alertPlaceholder(`Iniciando compra por lote de ${selectedPixels.size} píxeles...`);
+                alertPlaceholder(`Iniciando compra por lote de ${selectedPixels.size} píxeles. Confirme en MetaMask...`);
                 
-                const tx = await pixelContract.buyMultiplePixels(xCoords, yCoords, colors);
+                const tx = await pixelContract.buyMultiplePixels(xCoords, yCoords, colors, { value: 0 });
                 await tx.wait();
 
                 alertPlaceholder("¡Compra exitosa! Transacción confirmada en la blockchain.");
                 clearCart();
-                // TODO: Recargar el mapa para reflejar nuevos dueños
+                
+                // Actualizar la interfaz después de la compra
+                await loadMapDataFromContract(); 
+                renderMap();
                 
             } catch (error) {
                 console.error("Error en la compra por lote:", error);
-                alertPlaceholder("Error en la transacción. Revise la consola para detalles.");
+                alertPlaceholder("Error en la transacción. Revise la consola para detalles. (Causa común: no tener suficiente USDC o MATIC).");
             }
         }
         
-        // --- FUNCIÓN DE REVENTA ---
+        // --- FUNCIÓN DE REVENTA (INTEGRADA) ---
         async function executeResale() {
             if (!currentAccount) {
-                alertPlaceholder("Por favor, conecte su billetera para vender píxeles.");
+                alertPlaceholder("Por favor, conecte su billetera para establecer un precio de reventa.");
                 return;
             }
-            // Lógica de reventa pendiente (se necesita el pixelId y el newPrice del modal)
             
-            const newPrice = parseFloat(document.getElementById('new-price').value);
-            if (isNaN(newPrice) || newPrice <= INITIAL_PRICE_USDC) {
+            // Necesitamos guardar el píxel actual en el estado global antes de abrir el modal
+            const pixel = currentPixel; 
+
+            // La reventa solo puede ser de un pixel a la vez (desde el modal)
+            if (!pixel || !pixel.isOwned) return;
+            
+            const newPriceFloat = parseFloat(document.getElementById('new-price').value);
+            
+            if (isNaN(newPriceFloat) || newPriceFloat <= INITIAL_PRICE_USDC) {
                 alertPlaceholder(`El precio de reventa debe ser mayor a ${INITIAL_PRICE_USDC} USDC.`);
                 return;
             }
 
-            // Lógica para obtener las coordenadas del píxel seleccionado en el modal...
-            // Esto requiere un ajuste en showModal para guardar el pixelId actual.
-            
-            alertPlaceholder("Simulación: Ejecutando Reventa...");
-            
-            // const newPriceInWei = toContractDecimals(newPrice);
-            // const tx = await pixelContract.setSalePrice(x, y, newPriceInWei);
-            // await tx.wait();
-            // alertPlaceholder("Precio de reventa actualizado con éxito.");
-            
-            hideModal('info-modal');
-        }
+            const newPriceInWei = toContractDecimals(newPriceFloat);
 
+            try {
+                alertPlaceholder(`Estableciendo precio de reventa a ${newPriceFloat} USDC. Confirme en MetaMask...`);
+                
+                const tx = await pixelContract.setSalePrice(pixel.x, pixel.y, newPriceInWei);
+                await tx.wait();
+
+                alertPlaceholder("Precio de reventa actualizado con éxito.");
+                // Actualizar la interfaz después de la reventa
+                await loadMapDataFromContract(); 
+                renderMap();
+                hideModal('info-modal');
+
+            } catch (error) {
+                console.error("Error al establecer el precio de reventa:", error);
+                alertPlaceholder("Error al establecer el precio. Revise la consola para detalles.");
+            }
+        }
+        
         // =========================================================
         // PARTE V: INICIALIZACIÓN DEL DOCUMENTO
         // =========================================================
@@ -845,11 +919,11 @@
             WRAPPER = document.getElementById('map-interaction-wrapper');
             MAP_ELEMENT = document.getElementById('pixel-map-container');
             
-            // 1. Inicializa y dibuja el mapa (USA EL MAPA GENERATIVO ESTABLE)
+            // 1. Inicializa el mapa estático
             initializeMapData();
             renderMap();
             
-            // 2. Configuración de eventos de Zoom y Arrastre (Desktop)
+            // 2. Configuración de eventos de Zoom y Arrastre
             WRAPPER.addEventListener('wheel', handleZoom);
             WRAPPER.addEventListener('mousedown', handleMouseDown);
             document.addEventListener('mousemove', handleMouseMove);
