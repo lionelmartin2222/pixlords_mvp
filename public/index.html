@@ -250,7 +250,8 @@
         let currentPixel = { x: null, y: null }; 
         let pixelContract; 
         let paymentTokenContract; // Contrato para la aprobación de USDC
-        let provider; 
+        let provider; // Proveedor de solo lectura/vista
+        let signer; // Firmante (para transacciones)
 
         // --- VARIABLES DE ZOOM/ARRRASTRE ---
         let WRAPPER;
@@ -796,7 +797,7 @@
                     
                     // 3. Pedir acceso a la cuenta de Metamask
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    currentAccount = accounts[0];
+                    currentAccount = accounts[0]; // La cuenta conectada
                     
                     // 4. Inicializar contratos con el SIGNER
                     const signer = provider.getSigner();
@@ -1001,7 +1002,7 @@
             WRAPPER = document.getElementById('map-interaction-wrapper');
             MAP_ELEMENT = document.getElementById('pixel-map-container');
             
-            // 1. Inicializa el mapa estático (antes de la conexión)
+            // 1. Inicializa el mapa estático
             initializeMapData();
             renderMap();
             
