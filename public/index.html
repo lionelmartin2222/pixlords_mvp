@@ -679,7 +679,7 @@
 
             const isUserOwner = (currentAccount && pixel.owner && pixel.owner.toLowerCase() === currentAccount.toLowerCase()); 
 
-            // CORRECCIÓN 2: Mostrar controles de propietario solo si está conectado Y es el dueño
+            // Mostrar controles de propietario solo si está conectado Y es el dueño
             document.getElementById('owner-controls').style.display = isUserOwner && pixel.isOwned ? 'block' : 'none'; 
             const buyBtn = document.getElementById('buy-pixel-btn');
 
@@ -691,9 +691,9 @@
                 };
             } else {
                 buyBtn.textContent = `COMPRAR (Reventa) por ${pixel.price.toFixed(2)} USDC`;
-                // La compra individual aún requiere más lógica, por ahora solo muestra el placeholder
-                buyBtn.onclick = () => {
-                    alertPlaceholder('Compra Individual/Reventa iniciada. Función buyPixel pendiente de implementación completa.');
+                // La compra individual llama a buyPixel, pasando el color actual del pixel
+                buyBtn.onclick = async () => {
+                    await executeSinglePurchase(pixel.x, pixel.y, pixel.price, pixel.color);
                     hideModal('info-modal');
                 };
             }
@@ -734,7 +734,6 @@
                     
                     try {
                         // Llamada a la función view del contrato: getPixel(x, y)
-                        // Devuelve: address owner, string memory color, uint256 price
                         const [owner, color, priceInWei] = await readOnlyContract.getPixel(x, y);
                         
                         mapData[index] = {
@@ -750,6 +749,9 @@
                     } catch (e) {
                         // Si hay un error, mantener el valor inicial
                         console.error(`Error al cargar pixel (${x}, ${y}):`, e);
+                        // Asegurar que se usen los datos iniciales si la llamada falla
+                        mapData[index].owner = 'Error';
+                        mapData[index].isOwned = false;
                     }
                 }
             }
@@ -765,12 +767,22 @@
              
              if (typeof window.ethereum !== 'undefined' && typeof window.ethereum.request !== 'undefined') {
                 try {
+                    // Inicializar el proveedor
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    
+                    // Comprobar la red actual (Chain ID para Polygon Mainnet es 137)
+                    const network = await provider.getNetwork();
+                    if (network.chainId !== 137) {
+                        statusMessage.textContent = '¡Red Incorrecta!';
+                        statusMessage.style.color = 'red';
+                        alertPlaceholder('Por favor, cambie su MetaMask a la red Polygon Mainnet (Chain ID 137).');
+                        return;
+                    }
+                    
                     // Pedir acceso a la cuenta de Metamask
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     currentAccount = accounts[0];
                     
-                    // Inicializar el proveedor y el firmante de Ethers
-                    provider = new ethers.providers.Web3Provider(window.ethereum);
                     const signer = provider.getSigner();
 
                     // Inicializar los contratos
@@ -780,20 +792,20 @@
                     // Actualizar el estado del botón y mensaje
                     statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
                     connectBtn.textContent = 'Desconectar';
-                    connectBtn.onclick = disconnectWallet; // Asignar la función de desconexión
+                    connectBtn.onclick = disconnectWallet; 
                     statusMessage.style.color = '#39FF14'; 
                     
                     // Cargar el estado real del mapa después de la conexión
                     await loadMapDataFromContract(); 
                     renderMap(); 
                     
-                    alertPlaceholder("Conexión a billetera exitosa.");
+                    alertPlaceholder("Conexión a billetera exitosa. ¡Mapa sincronizado!");
 
                 } catch (error) {
                     console.error("Error al conectar la billetera:", error);
                     statusMessage.textContent = 'Error de Conexión';
                     statusMessage.style.color = 'red';
-                    alertPlaceholder('Error de Conexión. Asegúrese de estar en Polygon Mainnet.');
+                    alertPlaceholder('Error de Conexión. Revise la consola para detalles o cambie a Polygon Mainnet.');
                 }
             } else {
                 alertPlaceholder("MetaMask no detectado. Por favor, instálelo.");
@@ -810,8 +822,46 @@
             statusMessage.style.color = '#FDFD96'; 
             connectBtn.onclick = connectWallet;
             alertPlaceholder("Billetera desconectada.");
-            // Opcional: recargar la página para restablecer el estado.
-            // location.reload();
+            location.reload(); // Recargar para forzar el estado inicial
+        }
+        
+        // --- FUNCIÓN DE COMPRA INDIVIDUAL (NO USADA PARA LOTE) ---
+        async function executeSinglePurchase(x, y, price, color) {
+            if (!currentAccount) {
+                alertPlaceholder("Por favor, conecte su billetera para comprar píxeles.");
+                return;
+            }
+            
+            const costInWei = toContractDecimals(price);
+
+            try {
+                // 1. APROBACIÓN (VERIFICAR SI ES NECESARIA Y APROBAR)
+                const allowance = await paymentTokenContract.allowance(currentAccount, CONTRACT_ADDRESS);
+                
+                if (allowance.lt(costInWei)) {
+                    alertPlaceholder(`Aprobando ${price} USDC para el contrato...`);
+                    const txApprove = await paymentTokenContract.approve(CONTRACT_ADDRESS, ethers.constants.MaxUint256);
+                    await txApprove.wait();
+                    alertPlaceholder("Aprobación exitosa. Continuando con la compra...");
+                }
+
+                // 2. COMPRA (LLAMADA FINAL AL CONTRATO)
+                alertPlaceholder(`Iniciando compra del píxel (${x}-${y}). Confirme en MetaMask...`);
+                
+                // Nota: Usamos buyPixel(x, y, color)
+                const tx = await pixelContract.buyPixel(x, y, color, { value: 0 });
+                await tx.wait();
+
+                alertPlaceholder("¡Compra individual exitosa! Transacción confirmada en la blockchain.");
+                
+                // Actualizar la interfaz
+                await loadMapDataFromContract(); 
+                renderMap();
+                
+            } catch (error) {
+                console.error("Error en la compra individual:", error);
+                alertPlaceholder("Error en la transacción. Revise la consola para detalles.");
+            }
         }
         
         // --- FUNCIÓN DE COMPRA POR LOTE (INTEGRADA) ---
@@ -822,30 +872,33 @@
             }
             if (selectedPixels.size === 0) return;
 
-            const totalCost = selectedPixels.size * INITIAL_PRICE_USDC;
-            const totalCostInWei = toContractDecimals(totalCost);
-            
+            // Recalcular el costo total en base a los datos del mapa
+            let totalCost = 0;
             const xCoords = [];
             const yCoords = [];
             const colors = [];
-            
-            // Recopilar datos
+
             for (const id of selectedPixels) {
                 const [x, y] = id.split('-').map(Number);
+                const index = y * WIDTH + x;
+                const pixel = mapData[index];
+                
+                // Usar el precio de reventa si está ocupado, o el precio inicial si está libre
+                totalCost += pixel.isOwned ? pixel.price : INITIAL_PRICE_USDC;
+
                 xCoords.push(x);
                 yCoords.push(y);
-                
-                // Usamos el color actual del mapa (LAND_COLOR o SEA_COLOR) como color inicial del NFT
-                const pixel = mapData[y * WIDTH + x];
                 colors.push(pixel.color); 
             }
+            
+            const totalCostInWei = toContractDecimals(totalCost);
 
             try {
                 // 1. APROBACIÓN (VERIFICAR SI ES NECESARIA Y APROBAR)
                 const allowance = await paymentTokenContract.allowance(currentAccount, CONTRACT_ADDRESS);
                 
                 if (allowance.lt(totalCostInWei)) {
-                    alertPlaceholder(`Aprobando ${totalCost} USDC para el contrato...`);
+                    alertPlaceholder(`Aprobando ${totalCost.toFixed(2)} USDC para el contrato...`);
                     // Se aprueba MaxUint256 para evitar aprobaciones futuras
                     const txApprove = await paymentTokenContract.approve(CONTRACT_ADDRESS, ethers.constants.MaxUint256);
                     await txApprove.wait();
@@ -853,7 +906,7 @@
                 }
 
                 // 2. COMPRA (LLAMADA FINAL AL CONTRATO)
-                alertPlaceholder(`Iniciando compra por lote de ${selectedPixels.size} píxeles. Confirme en MetaMask...`);
+                alertPlaceholder(`Iniciando compra por lote de ${selectedPixels.size} píxeles. Costo: ${totalCost.toFixed(2)} USDC. Confirme en MetaMask...`);
                 
                 const tx = await pixelContract.buyMultiplePixels(xCoords, yCoords, colors, { value: 0 });
                 await tx.wait();
@@ -867,7 +920,7 @@
                 
             } catch (error) {
                 console.error("Error en la compra por lote:", error);
-                alertPlaceholder("Error en la transacción. Revise la consola para detalles. (Causa común: no tener suficiente USDC o MATIC).");
+                alertPlaceholder("Error en la transacción. Revise la consola para detalles. (Causa común: fondos insuficientes o rechazo de MetaMask).");
             }
         }
         
