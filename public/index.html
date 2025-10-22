@@ -250,7 +250,7 @@
         let currentPixel = { x: null, y: null }; 
         let pixelContract; 
         let paymentTokenContract; // Contrato para la aprobación de USDC
-        let provider;
+        let provider; // Proveedor de solo lectura/vista
 
         // --- VARIABLES DE ZOOM/ARRRASTRE ---
         let WRAPPER;
@@ -642,7 +642,14 @@
 
         function updateCartSummary() {
             const count = selectedPixels.size;
-            const totalCost = count * INITIAL_PRICE_USDC; 
+            // Calcular el costo total basado en el precio actual del pixel (1 USDC si es libre)
+            let totalCost = 0;
+            selectedPixels.forEach(id => {
+                const [x, y] = id.split('-').map(Number);
+                const index = y * WIDTH + x;
+                const pixel = mapData[index];
+                totalCost += pixel.price; // En esta fase de "Hard Reset", siempre es INITIAL_PRICE_USDC
+            });
             
             document.getElementById('cart-summary').textContent = 
                 `Cesta: ${count} píxeles seleccionados | Total: ${totalCost.toFixed(2)} USDC`;
@@ -723,7 +730,11 @@
 
         // --- FUNCIÓN DE CARGA DE DATOS DEL MAPA (LEER BLOCKCHAIN) ---
         async function loadMapDataFromContract() {
-            if (!provider) return;
+            if (!provider) {
+                 // Si no hay provider (no conectado), cargamos solo los datos estáticos
+                 initializeMapData();
+                 return;
+            }
 
             // Usamos un contrato sin signer, solo para lectura
             const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, provider);
@@ -747,11 +758,10 @@
                         };
 
                     } catch (e) {
-                        // Si hay un error, mantener el valor inicial
                         console.error(`Error al cargar pixel (${x}, ${y}):`, e);
-                        // Asegurar que se usen los datos iniciales si la llamada falla
-                        mapData[index].owner = 'Error';
-                        mapData[index].isOwned = false;
+                        // En caso de error de lectura, usamos los datos estáticos iniciales
+                        initializeMapData(); 
+                        return; // Detener la carga si hay error en la blockchain
                     }
                 }
             }
@@ -767,35 +777,39 @@
              
              if (typeof window.ethereum !== 'undefined' && typeof window.ethereum.request !== 'undefined') {
                 try {
-                    // Inicializar el proveedor
+                    // 1. Inicializar el proveedor
                     provider = new ethers.providers.Web3Provider(window.ethereum);
                     
-                    // Comprobar la red actual (Chain ID para Polygon Mainnet es 137)
+                    // 2. Comprobar la red actual (Chain ID para Polygon Mainnet es 137)
                     const network = await provider.getNetwork();
                     if (network.chainId !== 137) {
                         statusMessage.textContent = '¡Red Incorrecta!';
                         statusMessage.style.color = 'red';
                         alertPlaceholder('Por favor, cambie su MetaMask a la red Polygon Mainnet (Chain ID 137).');
+                        // Sugerir el cambio de red a Polygon (Mejora UX)
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x89' }], // Hex para 137
+                        });
                         return;
                     }
                     
-                    // Pedir acceso a la cuenta de Metamask
+                    // 3. Pedir acceso a la cuenta de Metamask
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     currentAccount = accounts[0];
                     
+                    // 4. Inicializar contratos con el SIGNER
                     const signer = provider.getSigner();
-
-                    // Inicializar los contratos
                     pixelContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, signer);
                     paymentTokenContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
                     
-                    // Actualizar el estado del botón y mensaje
+                    // 5. Actualizar la interfaz
                     statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
                     connectBtn.textContent = 'Desconectar';
                     connectBtn.onclick = disconnectWallet; 
                     statusMessage.style.color = '#39FF14'; 
                     
-                    // Cargar el estado real del mapa después de la conexión
+                    // 6. Cargar el estado real del mapa
                     await loadMapDataFromContract(); 
                     renderMap(); 
                     
@@ -805,7 +819,12 @@
                     console.error("Error al conectar la billetera:", error);
                     statusMessage.textContent = 'Error de Conexión';
                     statusMessage.style.color = 'red';
-                    alertPlaceholder('Error de Conexión. Revise la consola para detalles o cambie a Polygon Mainnet.');
+                    // Error 4001 es cuando el usuario rechaza la conexión
+                    if (error.code === 4001) {
+                         alertPlaceholder('Conexión rechazada por el usuario.');
+                    } else {
+                         alertPlaceholder('Error de Conexión. Revise la consola para detalles.');
+                    }
                 }
             } else {
                 alertPlaceholder("MetaMask no detectado. Por favor, instálelo.");
@@ -825,7 +844,7 @@
             location.reload(); // Recargar para forzar el estado inicial
         }
         
-        // --- FUNCIÓN DE COMPRA INDIVIDUAL (NO USADA PARA LOTE) ---
+        // --- FUNCIÓN DE COMPRA INDIVIDUAL ---
         async function executeSinglePurchase(x, y, price, color) {
             if (!currentAccount) {
                 alertPlaceholder("Por favor, conecte su billetera para comprar píxeles.");
@@ -848,19 +867,23 @@
                 // 2. COMPRA (LLAMADA FINAL AL CONTRATO)
                 alertPlaceholder(`Iniciando compra del píxel (${x}-${y}). Confirme en MetaMask...`);
                 
-                // Nota: Usamos buyPixel(x, y, color)
                 const tx = await pixelContract.buyPixel(x, y, color, { value: 0 });
                 await tx.wait();
 
                 alertPlaceholder("¡Compra individual exitosa! Transacción confirmada en la blockchain.");
-                
-                // Actualizar la interfaz
                 await loadMapDataFromContract(); 
                 renderMap();
                 
             } catch (error) {
-                console.error("Error en la compra individual:", error);
-                alertPlaceholder("Error en la transacción. Revise la consola para detalles.");
+                 // Manejo específico para errores de gas y rechazos
+                if (error.code === 4001) {
+                    alertPlaceholder("Transacción rechazada por el usuario.");
+                } else if (error.code === -32603 && error.data && error.data.message.includes("INSUFFICIENT_FUNDS")) {
+                    alertPlaceholder("Fondos insuficientes para el gas o el token.");
+                } else {
+                    console.error("Error en la compra individual:", error);
+                    alertPlaceholder("Error en la transacción. Revise la consola para detalles.");
+                }
             }
         }
         
@@ -872,7 +895,6 @@
             }
             if (selectedPixels.size === 0) return;
 
-            // Recalcular el costo total en base a los datos del mapa
             let totalCost = 0;
             const xCoords = [];
             const yCoords = [];
@@ -898,8 +920,7 @@
                 const allowance = await paymentTokenContract.allowance(currentAccount, CONTRACT_ADDRESS);
                 
                 if (allowance.lt(totalCostInWei)) {
-                    alertPlaceholder(`Aprobando ${totalCost.toFixed(2)} USDC para el contrato...`);
-                    // Se aprueba MaxUint256 para evitar aprobaciones futuras
+                    alertPlaceholder(`Aprobando ${totalCost.toFixed(2)} USDC para el contrato. Confirme en MetaMask...`);
                     const txApprove = await paymentTokenContract.approve(CONTRACT_ADDRESS, ethers.constants.MaxUint256);
                     await txApprove.wait();
                     alertPlaceholder("Aprobación exitosa. Continuando con la compra...");
@@ -919,8 +940,15 @@
                 renderMap();
                 
             } catch (error) {
-                console.error("Error en la compra por lote:", error);
-                alertPlaceholder("Error en la transacción. Revise la consola para detalles. (Causa común: fondos insuficientes o rechazo de MetaMask).");
+                // Manejo específico para errores de gas y rechazos
+                if (error.code === 4001) {
+                    alertPlaceholder("Transacción rechazada por el usuario.");
+                } else if (error.code === -32603 && error.data && error.data.message.includes("INSUFFICIENT_FUNDS")) {
+                    alertPlaceholder("Fondos insuficientes para el gas o el token.");
+                } else {
+                    console.error("Error en la compra por lote:", error);
+                    alertPlaceholder("Error en la transacción. Revise la consola para detalles.");
+                }
             }
         }
         
@@ -931,10 +959,8 @@
                 return;
             }
             
-            // Necesitamos guardar el píxel actual en el estado global antes de abrir el modal
             const pixel = currentPixel; 
 
-            // La reventa solo puede ser de un pixel a la vez (desde el modal)
             if (!pixel || !pixel.isOwned) return;
             
             const newPriceFloat = parseFloat(document.getElementById('new-price').value);
@@ -953,14 +979,17 @@
                 await tx.wait();
 
                 alertPlaceholder("Precio de reventa actualizado con éxito.");
-                // Actualizar la interfaz después de la reventa
                 await loadMapDataFromContract(); 
                 renderMap();
                 hideModal('info-modal');
 
             } catch (error) {
-                console.error("Error al establecer el precio de reventa:", error);
-                alertPlaceholder("Error al establecer el precio. Revise la consola para detalles.");
+                if (error.code === 4001) {
+                    alertPlaceholder("Transacción rechazada por el usuario.");
+                } else {
+                    console.error("Error al establecer el precio de reventa:", error);
+                    alertPlaceholder("Error al establecer el precio. Revise la consola para detalles.");
+                }
             }
         }
         
@@ -972,7 +1001,7 @@
             WRAPPER = document.getElementById('map-interaction-wrapper');
             MAP_ELEMENT = document.getElementById('pixel-map-container');
             
-            // 1. Inicializa el mapa estático
+            // 1. Inicializa el mapa estático (antes de la conexión)
             initializeMapData();
             renderMap();
             
