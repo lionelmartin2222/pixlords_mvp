@@ -250,8 +250,8 @@
         let currentPixel = { x: null, y: null }; 
         let pixelContract; 
         let paymentTokenContract; // Contrato para la aprobación de USDC
-        let provider; // Proveedor de solo lectura/vista
-        let signer; // Firmante (para transacciones)
+        let provider; 
+        let signer; 
 
         // --- VARIABLES DE ZOOM/ARRRASTRE ---
         let WRAPPER;
@@ -772,77 +772,90 @@
         // PARTE IV: CONEXIÓN REAL A BLOCKCHAIN (INTEGRACIÓN)
         // =========================================================
 
-        async function connectWallet() {
+        // Nueva función para manejar la lógica de conexión y actualizar la interfaz
+        async function handleConnection(accounts) {
              const statusMessage = document.getElementById('status-message');
              const connectBtn = document.getElementById('connect-wallet');
-             
-             if (typeof window.ethereum !== 'undefined' && typeof window.ethereum.request !== 'undefined') {
-                try {
-                    // 1. Inicializar el proveedor
-                    provider = new ethers.providers.Web3Provider(window.ethereum);
-                    
-                    // 2. Comprobar la red actual (Chain ID para Polygon Mainnet es 137)
-                    const network = await provider.getNetwork();
-                    if (network.chainId !== 137) {
-                        statusMessage.textContent = '¡Red Incorrecta!';
-                        statusMessage.style.color = 'red';
-                        alertPlaceholder('Por favor, cambie su MetaMask a la red Polygon Mainnet (Chain ID 137).');
-                        // Sugerir el cambio de red a Polygon (Mejora UX)
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: '0x89' }], // Hex para 137
-                        });
-                        return;
-                    }
-                    
-                    // 3. Pedir acceso a la cuenta de Metamask
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    currentAccount = accounts[0]; // La cuenta conectada
-                    
-                    // 4. Inicializar contratos con el SIGNER
-                    const signer = provider.getSigner();
-                    pixelContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, signer);
-                    paymentTokenContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
-                    
-                    // 5. Actualizar la interfaz
-                    statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
-                    connectBtn.textContent = 'Desconectar';
-                    connectBtn.onclick = disconnectWallet; 
-                    statusMessage.style.color = '#39FF14'; 
-                    
-                    // 6. Cargar el estado real del mapa
-                    await loadMapDataFromContract(); 
-                    renderMap(); 
-                    
-                    alertPlaceholder("Conexión a billetera exitosa. ¡Mapa sincronizado!");
 
-                } catch (error) {
-                    console.error("Error al conectar la billetera:", error);
-                    statusMessage.textContent = 'Error de Conexión';
+             if (accounts.length === 0) {
+                 currentAccount = null;
+                 statusMessage.textContent = 'DESCONECTADO';
+                 statusMessage.style.color = '#FDFD96';
+                 connectBtn.textContent = 'Conectar Billetera (MetaMask)';
+                 connectBtn.onclick = connectWallet;
+                 location.reload(); // Recargar para restablecer el estado
+                 return;
+             }
+             
+             currentAccount = accounts[0];
+
+             try {
+                // 1. Inicializar el proveedor
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+
+                // 2. Comprobar la red actual (Chain ID para Polygon Mainnet es 137)
+                const network = await provider.getNetwork();
+                if (network.chainId !== 137) {
+                    statusMessage.textContent = '¡Red Incorrecta!';
                     statusMessage.style.color = 'red';
-                    // Error 4001 es cuando el usuario rechaza la conexión
-                    if (error.code === 4001) {
-                         alertPlaceholder('Conexión rechazada por el usuario.');
-                    } else {
-                         alertPlaceholder('Error de Conexión. Revise la consola para detalles.');
-                    }
+                    alertPlaceholder('Por favor, cambie su MetaMask a la red Polygon Mainnet (Chain ID 137).');
+                    // Sugerir el cambio de red a Polygon (Mejora UX)
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0x89' }], // Hex para 137
+                    });
+                    return;
+                }
+
+                // 3. Inicializar contratos con el SIGNER
+                const signer = provider.getSigner();
+                pixelContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, signer);
+                paymentTokenContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
+                
+                // 4. Actualizar la interfaz
+                statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
+                connectBtn.textContent = 'Desconectar';
+                connectBtn.onclick = disconnectWallet; 
+                statusMessage.style.color = '#39FF14'; 
+                
+                // 5. Cargar el estado real del mapa
+                await loadMapDataFromContract(); 
+                renderMap(); 
+                
+                alertPlaceholder("Conexión a billetera exitosa. ¡Mapa sincronizado!");
+
+            } catch (error) {
+                console.error("Error en handleConnection:", error);
+                statusMessage.textContent = 'Error de Conexión';
+                statusMessage.style.color = 'red';
+                if (error.code === 4001) {
+                    alertPlaceholder('Conexión rechazada por el usuario.');
+                } else {
+                    alertPlaceholder('Error de Conexión. Revise la consola para detalles.');
+                }
+            }
+        }
+
+        // Función llamada al hacer clic en "Conectar Billetera"
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Solicitar conexión de cuentas
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    await handleConnection(accounts);
+                } catch (error) {
+                    console.error("Error al solicitar cuentas:", error);
+                    alertPlaceholder('Solicitud de conexión rechazada.');
                 }
             } else {
                 alertPlaceholder("MetaMask no detectado. Por favor, instálelo.");
             }
         }
-
+        
         function disconnectWallet() {
+            // El listener accountsChanged debería manejar la desconexión
             currentAccount = null;
-            const statusMessage = document.getElementById('status-message');
-            const connectBtn = document.getElementById('connect-wallet');
-            
-            statusMessage.textContent = 'DESCONECTADO';
-            connectBtn.textContent = 'Conectar Billetera (MetaMask)';
-            statusMessage.style.color = '#FDFD96'; 
-            connectBtn.onclick = connectWallet;
-            alertPlaceholder("Billetera desconectada.");
-            location.reload(); // Recargar para forzar el estado inicial
+            location.reload(); 
         }
         
         // --- FUNCIÓN DE COMPRA INDIVIDUAL ---
@@ -1025,6 +1038,19 @@
             
             // 5. Placeholders de controles de propietario
             document.getElementById('sell-pixel-btn').addEventListener('click', executeResale);
+            
+            // 6. Listener para cambios en la cuenta y la red (CRÍTICO para estabilidad)
+            if (window.ethereum) {
+                window.ethereum.on('accountsChanged', (accounts) => {
+                    handleConnection(accounts);
+                });
+                window.ethereum.on('chainChanged', (chainId) => {
+                    location.reload(); // Recargar la página si cambia la red
+                });
+
+                // Intentar la conexión automática si ya hay cuentas conectadas
+                window.ethereum.request({ method: 'eth_accounts' }).then(handleConnection);
+            }
         });
     </script>
 </body>
