@@ -431,7 +431,7 @@
             const ratio = oldScale / newScale;
 
             position.x = mouseX - (mouseX - position.x) * ratio;
-            position.y = mouseY - (mouseY - position.y) * ratio;
+            position.y = mouseY - (y - position.y) * ratio;
 
             const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
             const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
@@ -753,7 +753,7 @@
                             x,
                             y,
                             // Si el color es una cadena vacía (primera compra), usa el color generativo
-                            color: color === "" ? getInitialMapColor(x, y) : color, 
+                            color: color === "0x0000000000000000000000000000000000000000" ? getInitialMapColor(x, y) : color, 
                             owner: owner === '0x0000000000000000000000000000000000000000' ? 'Libre' : owner,
                             price: fromContractDecimals(priceInWei),
                             isOwned: owner !== '0x0000000000000000000000000000000000000000'
@@ -801,11 +801,13 @@
                     statusMessage.textContent = '¡Red Incorrecta!';
                     statusMessage.style.color = 'red';
                     alertPlaceholder('Por favor, cambie su MetaMask a la red Polygon Mainnet (Chain ID 137).');
-                    // Sugerir el cambio de red a Polygon (Mejora UX)
+                    
+                    // Sugerir el cambio de red (solicitud que detiene el flujo hasta que el usuario actúa)
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: '0x89' }], // Hex para 137
                     });
+                    // La recarga se maneja por el listener 'chainChanged'
                     return;
                 }
 
@@ -835,8 +837,6 @@
                 
                 if (error.code === 4001) {
                     alertPlaceholder('Conexión rechazada por el usuario.');
-                } else if (error.message.includes("could not detect network")) {
-                    alertPlaceholder('MetaMask no detectó la red. Asegúrese de que esté desbloqueado y en la red Polygon.');
                 } else {
                     alertPlaceholder('Error de Conexión. Revise la consola para detalles.');
                 }
@@ -853,8 +853,8 @@
             if (typeof window.ethereum !== 'undefined') {
                 try {
                     // Solicitar conexión de cuentas (esto disparará el modal de MetaMask)
+                    // Hacemos el await para que no intente ejecutar handleConnection hasta que se obtengan las cuentas
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    // Cuando el usuario acepta, handleConnection se ejecuta
                     handleConnection(accounts); 
                 } catch (error) {
                     // Este catch maneja el rechazo inicial del modal de MetaMask
@@ -876,8 +876,8 @@
         
         // --- FUNCIÓN DE COMPRA INDIVIDUAL ---
         async function executeSinglePurchase(x, y, price, color) {
-            if (!currentAccount) {
-                alertPlaceholder("Por favor, conecte su billetera para comprar píxeles.");
+            if (!currentAccount || !pixelContract || !paymentTokenContract) {
+                alertPlaceholder("Error: La billetera no está conectada o los contratos no se inicializaron correctamente.");
                 return;
             }
             
@@ -908,8 +908,6 @@
                  // Manejo específico para errores de gas y rechazos
                 if (error.code === 4001) {
                     alertPlaceholder("Transacción rechazada por el usuario.");
-                } else if (error.code === -32603 && error.data && error.data.message.includes("INSUFFICIENT_FUNDS")) {
-                    alertPlaceholder("Fondos insuficientes para el gas o el token.");
                 } else {
                     console.error("Error en la compra individual:", error);
                     alertPlaceholder("Error en la transacción. Revise la consola para detalles.");
@@ -919,8 +917,8 @@
         
         // --- FUNCIÓN DE COMPRA POR LOTE (INTEGRADA) ---
         async function executeBatchPurchase() {
-            if (!currentAccount) {
-                alertPlaceholder("Por favor, conecte su billetera para comprar píxeles.");
+            if (!currentAccount || !pixelContract || !paymentTokenContract) {
+                alertPlaceholder("Error: La billetera no está conectada o los contratos no se inicializaron correctamente. Intente reconectar.");
                 return;
             }
             if (selectedPixels.size === 0) return;
@@ -984,11 +982,11 @@
         
         // --- FUNCIÓN DE REVENTA (INTEGRADA) ---
         async function executeResale() {
-            if (!currentAccount) {
-                alertPlaceholder("Por favor, conecte su billetera para establecer un precio de reventa.");
+            if (!currentAccount || !pixelContract || !paymentTokenContract) {
+                alertPlaceholder("Error: La billetera no está conectada o los contratos no se inicializaron correctamente.");
                 return;
             }
-            
+
             const pixel = currentPixel; 
 
             if (!pixel || !pixel.isOwned) return;
@@ -1011,7 +1009,7 @@
                 alertPlaceholder("Precio de reventa actualizado con éxito.");
                 await loadMapDataFromContract(); 
                 renderMap();
-                hideModal('info-info');
+                hideModal('info-modal');
 
             } catch (error) {
                 if (error.code === 4001) {
