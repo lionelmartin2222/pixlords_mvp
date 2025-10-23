@@ -431,7 +431,7 @@
             const ratio = oldScale / newScale;
 
             position.x = mouseX - (mouseX - position.x) * ratio;
-            position.y = mouseY - (y - position.y) * ratio;
+            position.y = mouseY - (mouseY - position.y) * ratio;
 
             const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
             const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
