@@ -274,7 +274,7 @@
         // 1. Dirección del Contrato Desplegado en PolygonScan
         const CONTRACT_ADDRESS = "0xeC1478F4ECa7698D1A0fB6BDd44387177aB2726d"; 
 
-        // 2. ABI del Contrato (Código JSON, pegado aquí) - CORREGIDO
+        // 2. ABI del Contrato (Código JSON, pegado aquí)
         const PIXEL_CONTRACT_ABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"inputs":[],"name":"ReentrancyGuardReentrantCall","type":"error"},{"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"SafeERC20FailedOperation","type":"error"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"string","name":"newColor","type":"string"}],"name":"PixelColorChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newPrice","type":"uint256"}],"name":"PixelPriceSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"buyer","type":"address"},{"indexed":true,"internalType":"uint256","name":"x","type":"uint256"},{"indexed":true,"internalType":"uint256","name":"y","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"price","type":"uint256"}],"name":"PixelPurchased","type":"event"},{"inputs":[],"name":"COMMISSION_PERCENT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"INITIAL_PRICE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAP_HEIGHT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAP_WIDTH","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256[]","name":"xCoords","type":"uint256[]"},{"internalType":"uint256[]","name":"yCoords","type":"uint256[]"},{"internalType":"string[]","name":"colors","type":"string[]"}],"name":"buyMultiplePixels","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"},{"internalType":"string","name":"newColor","type":"string"}],"name":"buyPixel","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"developerWallet","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"}],"name":"getPixel","outputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"string","name":"color","type":"string"},{"internalType":"uint256","name":"price","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"}],"name":"isPixelOwned","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"map","outputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"string","name":"color","type":"string"},{"internalType":"uint256","name":"price","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"paymentToken","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newDeveloperWallet","type":"address"}],"name":"setDeveloperWallet","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"x","type":"uint256"},{"internalType":"uint256","name":"y","type":"uint256"},{"internalType":"uint256","name":"newPrice","type":"uint256"}],"name":"setSalePrice","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdrawToken","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
         // 3. Dirección del Token de Pago (USDC Nativo, confirmado)
@@ -637,7 +637,7 @@
                 const modal = document.getElementById('info-modal');
                 const message = modal.querySelector('#modal-message');
                 message.textContent = "Este píxel ya está comprado. Haz clic izquierdo para ver detalles.";
-                setTimeout(() => { message.textContent = ""; }, 3000); 
+                setTimeout(() => { message.textContent = "", hideModal('info-modal'); }, 3000); 
             }
         }
 
@@ -783,7 +783,6 @@
                  statusMessage.style.color = '#FDFD96';
                  connectBtn.textContent = 'Conectar Billetera (MetaMask)';
                  connectBtn.onclick = connectWallet;
-                 location.reload(); // Recargar para restablecer el estado
                  return;
              }
              
@@ -842,7 +841,8 @@
                 try {
                     // Solicitar conexión de cuentas
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    await handleConnection(accounts);
+                    // Usamos handleConnection para procesar las cuentas obtenidas
+                    handleConnection(accounts); 
                 } catch (error) {
                     console.error("Error al solicitar cuentas:", error);
                     alertPlaceholder('Solicitud de conexión rechazada.');
@@ -853,7 +853,7 @@
         }
         
         function disconnectWallet() {
-            // El listener accountsChanged debería manejar la desconexión
+            // Simula la desconexión forzada
             currentAccount = null;
             location.reload(); 
         }
@@ -874,7 +874,7 @@
                 if (allowance.lt(costInWei)) {
                     alertPlaceholder(`Aprobando ${price} USDC para el contrato...`);
                     const txApprove = await paymentTokenContract.approve(CONTRACT_ADDRESS, ethers.constants.MaxUint256);
-                    await txApprove.wait();
+                    await txAppprove.wait();
                     alertPlaceholder("Aprobación exitosa. Continuando con la compra...");
                 }
 
@@ -1041,14 +1041,16 @@
             
             // 6. Listener para cambios en la cuenta y la red (CRÍTICO para estabilidad)
             if (window.ethereum) {
+                // Se disparará cuando el usuario cambie de cuenta o se conecte/desconecte
                 window.ethereum.on('accountsChanged', (accounts) => {
                     handleConnection(accounts);
                 });
+                // Se disparará si el usuario cambia la red (lo que requiere recargar)
                 window.ethereum.on('chainChanged', (chainId) => {
                     location.reload(); // Recargar la página si cambia la red
                 });
 
-                // Intentar la conexión automática si ya hay cuentas conectadas
+                // Intentar la conexión automática al cargar la página
                 window.ethereum.request({ method: 'eth_accounts' }).then(handleConnection);
             }
         });
