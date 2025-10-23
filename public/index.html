@@ -7,7 +7,7 @@
     <style>
         /* ========================= CSS: VERSION 8.1 (AJUSTES DE ESCALADO Y VISUALIZACIÓN) ========================= */
 
-        /* Fuente: Estilo Pixel Art */
+        /* Fuente: Estilo Pixel Típica */
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         body {
@@ -431,7 +431,7 @@
             const ratio = oldScale / newScale;
 
             position.x = mouseX - (mouseX - position.x) * ratio;
-            position.y = mouseY - (mouseY - position.y) * ratio;
+            position.y = mouseY - (myY - position.y) * ratio;
 
             const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
             const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
@@ -495,7 +495,7 @@
                 touchStartTimer = setTimeout(() => {
                     // Prevenir el menú contextual para que el toque largo funcione como selección
                     event.preventDefault(); 
-                    handlePixelRightClick({ preventDefault: () => {}, target: document.elementFromPoint(touch.clientX, touch.clientY) });
+                    handlePixelRightClick({ preventDFault: () => {}, target: document.elementFromPoint(touch.clientX, touch.clientY) });
                     isDragging = false; 
                     touchStartTimer = null;
                 }, 500); // 500ms para toque largo
@@ -546,7 +546,7 @@
             } else if (event.touches.length === 2 && initialDistance > 0) {
                 // Pinch-to-Zoom (dos dedos)
                 const newDistance = getDistance(event.touches);
-                const zoomFactor = newDistance / initialDistance;
+                const zoomFactor = new distance / initialDistance;
                 let newScale = lastScale * zoomFactor;
 
                 // Limitar el zoom
@@ -731,8 +731,9 @@
 
         // --- FUNCIÓN DE CARGA DE DATOS DEL MAPA (LEER BLOCKCHAIN) ---
         async function loadMapDataFromContract() {
+            const statusMessage = document.getElementById('status-message');
+            
             if (!provider) {
-                 // Si no hay provider (no conectado), cargamos solo los datos estáticos
                  initializeMapData();
                  return;
             }
@@ -760,9 +761,10 @@
 
                     } catch (e) {
                         console.error(`Error al cargar pixel (${x}, ${y}):`, e);
-                        // En caso de error de lectura, usamos los datos estáticos iniciales
+                        statusMessage.textContent = 'Error de Carga Mapa';
+                        statusMessage.style.color = 'red';
                         initializeMapData(); 
-                        return; // Detener la carga si hay error en la blockchain
+                        return;
                     }
                 }
             }
@@ -811,7 +813,7 @@
                 pixelContract = new ethers.Contract(CONTRACT_ADDRESS, PIXEL_CONTRACT_ABI, signer);
                 paymentTokenContract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
                 
-                // 4. Actualizar la interfaz
+                // 4. Actualizar la interfaz (Conexión Exitosa)
                 statusMessage.textContent = `Conectado: ${currentAccount.substring(0, 6)}...`;
                 connectBtn.textContent = 'Desconectar';
                 connectBtn.onclick = disconnectWallet; 
@@ -824,14 +826,27 @@
                 alertPlaceholder("Conexión a billetera exitosa. ¡Mapa sincronizado!");
 
             } catch (error) {
+                // Aquí caemos si falla la inicialización de los contratos o la red
                 console.error("Error en handleConnection:", error);
+                
+                // Si ya teníamos una cuenta (currentAccount está seteada), pero falla la conexión con el contrato,
+                // mostramos el error específico.
+                
                 statusMessage.textContent = 'Error de Conexión';
                 statusMessage.style.color = 'red';
+                
                 if (error.code === 4001) {
+                    // Usuario rechazó la conexión
                     alertPlaceholder('Conexión rechazada por el usuario.');
-                } else {
-                    alertPlaceholder('Error de Conexión. Revise la consola para detalles.');
+                } else if (error.message.includes("could not detect network")) {
+                    // Problema común si MetaMask no está desbloqueado
+                    alertPlaceholder('MetaMask no detectó la red. Asegúrese de que esté desbloqueado y en la red Polygon.');
                 }
+                
+                // Restablecer el estado visual a desconectado
+                currentAccount = null;
+                connectBtn.textContent = 'Conectar Billetera (MetaMask)';
+                connectBtn.onclick = connectWallet;
             }
         }
 
@@ -839,13 +854,15 @@
         async function connectWallet() {
             if (typeof window.ethereum !== 'undefined') {
                 try {
-                    // Solicitar conexión de cuentas
+                    // Solicitar conexión de cuentas (esto disparará el modal de MetaMask)
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    // Usamos handleConnection para procesar las cuentas obtenidas
+                    // Cuando el usuario acepta, handleConnection se ejecuta
                     handleConnection(accounts); 
                 } catch (error) {
                     console.error("Error al solicitar cuentas:", error);
                     alertPlaceholder('Solicitud de conexión rechazada.');
+                    document.getElementById('status-message').textContent = 'Error de Conexión';
+                    document.getElementById('status-message').style.color = 'red';
                 }
             } else {
                 alertPlaceholder("MetaMask no detectado. Por favor, instálelo.");
@@ -874,7 +891,7 @@
                 if (allowance.lt(costInWei)) {
                     alertPlaceholder(`Aprobando ${price} USDC para el contrato...`);
                     const txApprove = await paymentTokenContract.approve(CONTRACT_ADDRESS, ethers.constants.MaxUint256);
-                    await txAppprove.wait();
+                    await txApprove.wait();
                     alertPlaceholder("Aprobación exitosa. Continuando con la compra...");
                 }
 
@@ -995,7 +1012,7 @@
                 alertPlaceholder("Precio de reventa actualizado con éxito.");
                 await loadMapDataFromContract(); 
                 renderMap();
-                hideModal('info-modal');
+                hideModal('info-info');
 
             } catch (error) {
                 if (error.code === 4001) {
@@ -1041,13 +1058,13 @@
             
             // 6. Listener para cambios en la cuenta y la red (CRÍTICO para estabilidad)
             if (window.ethereum) {
-                // Se disparará cuando el usuario cambie de cuenta o se conecte/desconecte
+                // Se dispara cuando el usuario cambia de cuenta o conecta
                 window.ethereum.on('accountsChanged', (accounts) => {
                     handleConnection(accounts);
                 });
-                // Se disparará si el usuario cambia la red (lo que requiere recargar)
+                // Se dispara si el usuario cambia la red (recarga)
                 window.ethereum.on('chainChanged', (chainId) => {
-                    location.reload(); // Recargar la página si cambia la red
+                    location.reload(); 
                 });
 
                 // Intentar la conexión automática al cargar la página
