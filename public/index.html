@@ -774,11 +774,11 @@
         // PARTE IV: CONEXIÓN REAL A BLOCKCHAIN (INTEGRACIÓN)
         // =========================================================
 
-        // Nueva función para manejar la lógica de conexión y actualizar la interfaz
-        async function handleConnection(accounts) {
+        // Función central para inicializar contratos y estado, se llama desde connectWallet y listeners
+        async function initWeb3(accounts) {
              const statusMessage = document.getElementById('status-message');
              const connectBtn = document.getElementById('connect-wallet');
-
+             
              // --- Lógica de Desconexión ---
              if (accounts.length === 0) {
                  currentAccount = null;
@@ -802,12 +802,10 @@
                     statusMessage.style.color = 'red';
                     alertPlaceholder('Por favor, cambie su MetaMask a la red Polygon Mainnet (Chain ID 137).');
                     
-                    // Sugerir el cambio de red (solicitud que detiene el flujo hasta que el usuario actúa)
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: '0x89' }], // Hex para 137
                     });
-                    // La recarga se maneja por el listener 'chainChanged'
                     return;
                 }
 
@@ -829,8 +827,8 @@
                 alertPlaceholder("Conexión a billetera exitosa. ¡Mapa sincronizado!");
 
             } catch (error) {
-                // Aquí caemos si falla la inicialización de los contratos o la red
-                console.error("Error en handleConnection:", error);
+                // Si la conexión falla aquí, mostramos el error y restablecemos la interfaz
+                console.error("Error en initWeb3:", error);
                 
                 statusMessage.textContent = 'Error de Conexión';
                 statusMessage.style.color = 'red';
@@ -841,10 +839,10 @@
                     alertPlaceholder('Error de Conexión. Revise la consola para detalles.');
                 }
                 
-                // Resetear estado del botón para que se pueda volver a intentar
+                // Asegurar que el estado y el botón se puedan volver a usar
                 connectBtn.textContent = 'Conectar Billetera (MetaMask)';
                 connectBtn.onclick = connectWallet;
-                currentAccount = null; // Asegurar que el estado sea nulo
+                currentAccount = null; 
             }
         }
 
@@ -853,9 +851,9 @@
             if (typeof window.ethereum !== 'undefined') {
                 try {
                     // Solicitar conexión de cuentas (esto disparará el modal de MetaMask)
-                    // Hacemos el await para que no intente ejecutar handleConnection hasta que se obtengan las cuentas
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    handleConnection(accounts); 
+                    // Pasamos las cuentas a la función principal de inicialización
+                    initWeb3(accounts); 
                 } catch (error) {
                     // Este catch maneja el rechazo inicial del modal de MetaMask
                     console.error("Error al solicitar cuentas:", error);
@@ -869,7 +867,6 @@
         }
         
         function disconnectWallet() {
-            // Simula la desconexión forzada
             currentAccount = null;
             location.reload(); 
         }
@@ -1057,7 +1054,7 @@
             if (window.ethereum) {
                 // Se dispara cuando el usuario cambia de cuenta o conecta
                 window.ethereum.on('accountsChanged', (accounts) => {
-                    handleConnection(accounts);
+                    initWeb3(accounts);
                 });
                 // Se dispara si el usuario cambia la red (recarga)
                 window.ethereum.on('chainChanged', (chainId) => {
@@ -1065,7 +1062,7 @@
                 });
 
                 // Intentar la conexión automática al cargar la página
-                window.ethereum.request({ method: 'eth_accounts' }).then(handleConnection);
+                window.ethereum.request({ method: 'eth_accounts' }).then(initWeb3);
             }
         });
     </script>
