@@ -546,7 +546,7 @@
             } else if (event.touches.length === 2 && initialDistance > 0) {
                 // Pinch-to-Zoom (dos dedos)
                 const newDistance = getDistance(event.touches);
-                const zoomFactor = new distance / initialDistance;
+                const zoomFactor = newDistance / initialDistance;
                 let newScale = lastScale * zoomFactor;
 
                 // Limitar el zoom
@@ -715,7 +715,7 @@
         }
         
         function alertPlaceholder(message) {
-            console.log("ALERTA PLACEHOLDER: " + message);
+            console.log("ALERTA CONSOLA: " + message);
         }
 
         // --- FUNCIÓN DE UTILIDAD PARA CONVERTIR USDC ---
@@ -779,6 +779,7 @@
              const statusMessage = document.getElementById('status-message');
              const connectBtn = document.getElementById('connect-wallet');
 
+             // --- Lógica de Desconexión ---
              if (accounts.length === 0) {
                  currentAccount = null;
                  statusMessage.textContent = 'DESCONECTADO';
@@ -805,6 +806,7 @@
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: '0x89' }], // Hex para 137
                     });
+                    // Si el cambio es exitoso, el evento chainChanged recargará la página.
                     return;
                 }
 
@@ -829,24 +831,21 @@
                 // Aquí caemos si falla la inicialización de los contratos o la red
                 console.error("Error en handleConnection:", error);
                 
-                // Si ya teníamos una cuenta (currentAccount está seteada), pero falla la conexión con el contrato,
-                // mostramos el error específico.
-                
                 statusMessage.textContent = 'Error de Conexión';
                 statusMessage.style.color = 'red';
                 
                 if (error.code === 4001) {
-                    // Usuario rechazó la conexión
                     alertPlaceholder('Conexión rechazada por el usuario.');
                 } else if (error.message.includes("could not detect network")) {
-                    // Problema común si MetaMask no está desbloqueado
                     alertPlaceholder('MetaMask no detectó la red. Asegúrese de que esté desbloqueado y en la red Polygon.');
+                } else {
+                    alertPlaceholder('Error de Conexión. Revise la consola para detalles.');
                 }
                 
-                // Restablecer el estado visual a desconectado
-                currentAccount = null;
+                // Resetear estado del botón para que se pueda volver a intentar
                 connectBtn.textContent = 'Conectar Billetera (MetaMask)';
                 connectBtn.onclick = connectWallet;
+                currentAccount = null; // Asegurar que el estado sea nulo
             }
         }
 
@@ -859,10 +858,11 @@
                     // Cuando el usuario acepta, handleConnection se ejecuta
                     handleConnection(accounts); 
                 } catch (error) {
+                    // Este catch maneja el rechazo inicial del modal de MetaMask
                     console.error("Error al solicitar cuentas:", error);
                     alertPlaceholder('Solicitud de conexión rechazada.');
-                    document.getElementById('status-message').textContent = 'Error de Conexión';
-                    document.getElementById('status-message').style.color = 'red';
+                    document.getElementById('status-message').textContent = 'DESCONECTADO';
+                    document.getElementById('status-message').style.color = '#FDFD96';
                 }
             } else {
                 alertPlaceholder("MetaMask no detectado. Por favor, instálelo.");
@@ -870,7 +870,8 @@
         }
         
         function disconnectWallet() {
-            // Simula la desconexión forzada
+            // El mejor método para desconectar es que el usuario lo haga en MetaMask,
+            // pero si presiona el botón, recargamos la página para resetear el estado.
             currentAccount = null;
             location.reload(); 
         }
