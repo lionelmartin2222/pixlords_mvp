@@ -431,7 +431,7 @@
             const ratio = oldScale / newScale;
 
             position.x = mouseX - (mouseX - position.x) * ratio;
-            position.y = mouseY - (myY - position.y) * ratio;
+            position.y = mouseY - (mouseY - position.y) * ratio;
 
             const maxTranslateX = (scale - 1) * WRAPPER.clientWidth;
             const maxTranslateY = (scale - 1) * WRAPPER.clientHeight;
@@ -495,7 +495,7 @@
                 touchStartTimer = setTimeout(() => {
                     // Prevenir el menú contextual para que el toque largo funcione como selección
                     event.preventDefault(); 
-                    handlePixelRightClick({ preventDFault: () => {}, target: document.elementFromPoint(touch.clientX, touch.clientY) });
+                    handlePixelRightClick({ preventDefault: () => {}, target: document.elementFromPoint(touch.clientX, touch.clientY) });
                     isDragging = false; 
                     touchStartTimer = null;
                 }, 500); // 500ms para toque largo
@@ -806,7 +806,6 @@
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: '0x89' }], // Hex para 137
                     });
-                    // Si el cambio es exitoso, el evento chainChanged recargará la página.
                     return;
                 }
 
@@ -870,8 +869,7 @@
         }
         
         function disconnectWallet() {
-            // El mejor método para desconectar es que el usuario lo haga en MetaMask,
-            // pero si presiona el botón, recargamos la página para resetear el estado.
+            // Simula la desconexión forzada
             currentAccount = null;
             location.reload(); 
         }
