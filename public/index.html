@@ -495,6 +495,7 @@
                 touchStartTimer = setTimeout(() => {
                     // Prevenir el menú contextual para que el toque largo funcione como selección
                     event.preventDefault(); 
+                    // CORRECCIÓN SINTAXIS: Uso de un objeto simple para simular el evento
                     handlePixelRightClick({ preventDefault: () => {}, target: document.elementFromPoint(touch.clientX, touch.clientY) });
                     isDragging = false; 
                     touchStartTimer = null;
